@@ -31,23 +31,26 @@ class checkerboardClass:
         
         for i in range(len(self.redCheckers)):
             strng = [str(red) for red in self.redCheckers[i]]
-            strng.append("0")
-            strng.append(str(rand.randint(0,9)))
+            #strng.append(str(rand.randint(0,9)))
             a_string = "".join(strng)
-            final = int(a_string)
+            final = ((int(a_string))/1000) - 2 
+            #CONVERTS IE 1359 (KING,Y,X,COLOR) to 1.359 for activation - 2 so that Gauss can properly work
 
             tempC.append(final)
+            tempC.append(1) # REPRESENTS RED
             
 
 
         for i in range(len(self.blueCheckers)):
             strng = [str(blue) for blue in self.blueCheckers[i]]
-            strng.append("9")
-            strng.append(str(rand.randint(0,9)))
+            
+            #strng.append(str(rand.randint(0,9)))
             a_string = "".join(strng)
-            final = int(a_string)
-
+            final = ((int(a_string))/1000) - 2
+            #CONVERTS IE 1359 (KING,Y,X,COLOR) to 1.359 for activation - 2 so that Gauss can properly work
+            
             tempC.append(final)
+            tempC.append(-1) # REPRESENTS BLUE
 
         self.data = tempC
         return tempC
@@ -57,6 +60,21 @@ class checkerboardClass:
         return self.data
 
     
+
+    def getSelection(self):
+        if self.currentTurn == "Blue":
+            legalJumps = [[1,1],[2,2],[1,-1],[2,-2],[-1,-1],[-2,-2],[-1,1],[-2,2]]
+        else:
+            legalJumps = [[-1,-1],[-2,-2],[-1,1],[-2,2],[1,1],[2,2],[1,-1],[2,-2]] 
+
+        for y in range(8):
+            for x in range(8):
+                if y % 2 == x % 2:
+                    if self.legalChoice([1,y+1,x+1],color):
+                        self.board[y][x] = "b"
+                    elif self.legalChoice([2,y+1,x+1],color):
+
+
     
     def prettyBoard(self):
         for y in range(8):
