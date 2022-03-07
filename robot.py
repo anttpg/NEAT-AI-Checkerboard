@@ -32,7 +32,7 @@ class robot:
         for i in range(len(self.currentState[1])):
             self.currentState[1][i].append(-4)
             tempC.append(self.currentState[1][i])
-
+        tempC.ravel()
         return tempC
 
 
