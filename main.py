@@ -107,7 +107,7 @@ def eval_genomes(genomes, config):
         try:  
             currentGames.append(checkerboardClass(config, red, blue, robots[r],robots[r+1]))
         except:
-            print("exceeded limit")
+            print("exceeded limit (In game creation)")
         r+=1
     
     #for each game, play through an entire game
@@ -115,9 +115,8 @@ def eval_genomes(genomes, config):
         while(game.win == False): ##while nobody has won, continue to run. 
             
             if (game.currentTurn == "Blue"):
-                print(game.p1.getData())
                 
-                output = nets[g].activate(game.p1.getData()) ##Red checkers, blue checkers. BLUE CHECKER ROBOT
+                output = nets[g].activate(game.refreshData()) ##Red checkers, blue checkers. BLUE CHECKER ROBOT
                 game.p1.requestSelection(int(output[0]*10),
                                             int(output[1]*10),
                                             int(output[2]*10),
@@ -130,7 +129,7 @@ def eval_genomes(genomes, config):
 
             
             else:
-                output = nets[g].activate(game.blueCheckers,game.redCheckers) ##Red checkers, blue checkers. RED CHECKER ROBOT
+                output = nets[g].activate(game.refreshData()) ##Red checkers, blue checkers. RED CHECKER ROBOT
                 game.p2.requestSelection(int(output[0]*10),
                                             int(output[1]*10),
                                             int(output[2]*10),

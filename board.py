@@ -6,6 +6,7 @@ class checkerboardClass:
     redCheckers = []
     blueCheckers = []
     board = []
+    data = []
     currentTurn = "Blue"
     makeKing = False
     win = False
@@ -22,8 +23,36 @@ class checkerboardClass:
 
         
         
-        #print("game setup!")
-                
+        
+    def refreshData(self):
+        tempC = []
+        
+        for i in range(len(self.redCheckers)):
+            strng = [str(red) for red in self.redCheckers[i]]
+            strng.append("0")
+            a_string = "".join(strng)
+            final = int(a_string)
+
+            tempC.append(final)
+            
+
+
+        for i in range(len(self.blueCheckers)):
+            strng = [str(blue) for blue in self.blueCheckers[i]]
+            strng.append("9")
+            a_string = "".join(strng)
+            final = int(a_string)
+
+            tempC.append(final)
+
+        self.data = tempC
+        return tempC
+
+
+    def getData(self):
+        return self.data
+
+    
     
     def prettyBoard(self):
         for y in range(8):
@@ -71,10 +100,10 @@ class checkerboardClass:
                 self.switchTurn()
             
         else:
-            print("Sorry! That is not a legal move. Please follow the 135 format, [Rank + Y + X].")
+            #print("Sorry! That is not a legal move. Please follow the 135 format, [Rank + Y + X].")
             p.changeFitness(-1)
         p.resetChoice()
-        self.prettyBoard()
+        ##self.prettyBoard()
         
 
 
