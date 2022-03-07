@@ -23,23 +23,17 @@ class robot:
     def getFitness(self):
         return self.fitness
 
-    def getData(self):
-        tempC = []
-        for i in range(len(self.currentState[0])):
-            self.currentState[0][i].append(-3)
-            tempC.append(self.currentState[0][i])
+    # def getData(self):
+    #     tempC = []
+    #     for i in range(len(self.currentState[0])):
+    #         self.currentState[0][i].append(-3)
+    #         tempC.append(self.currentState[0][i])
 
-        for i in range(len(self.currentState[1])):
-            self.currentState[1][i].append(-4)
-            tempC.append(self.currentState[1][i])
-        tempC.ravel()
-        return tempC
-
-
-        
-        
-
-
+    #     for i in range(len(self.currentState[1])):
+    #         self.currentState[1][i].append(-4)
+    #         tempC.append(self.currentState[1][i])
+    #     tempC.ravel()
+    #     return tempC
 
     def resetChoice(self): ##called at the end of each turn.
         self.choiceFrom = [-1,-1,-1]
@@ -62,9 +56,6 @@ class robot:
                 self.choiceFrom = [2,f1,f2]
                 self.choiceTo = [2,t1,t2]
         
-        
-
-
     def isRobot():
         return True
 

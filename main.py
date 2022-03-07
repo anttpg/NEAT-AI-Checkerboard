@@ -107,7 +107,7 @@ def eval_genomes(genomes, config):
         try:  
             currentGames.append(checkerboardClass(config, red, blue, robots[r],robots[r+1]))
         except:
-            print("exceeded limit (In game creation)")
+            #print("exceeded limit (In game creation)")
         r+=1
     
     #for each game, play through an entire game

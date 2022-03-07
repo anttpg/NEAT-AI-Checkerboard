@@ -1,4 +1,6 @@
 from sys import builtin_module_names
+import random as rand
+
 from robot import *
 from human import *
 
@@ -30,6 +32,7 @@ class checkerboardClass:
         for i in range(len(self.redCheckers)):
             strng = [str(red) for red in self.redCheckers[i]]
             strng.append("0")
+            strng.append(str(rand.randint(0,9)))
             a_string = "".join(strng)
             final = int(a_string)
 
@@ -40,6 +43,7 @@ class checkerboardClass:
         for i in range(len(self.blueCheckers)):
             strng = [str(blue) for blue in self.blueCheckers[i]]
             strng.append("9")
+            strng.append(str(rand.randint(0,9)))
             a_string = "".join(strng)
             final = int(a_string)
 
@@ -141,12 +145,12 @@ class checkerboardClass:
             if(jump):
                 self.redCheckers.pop(capturedChecker)
                 if(p.isRobot()):
-                    p.changeFitness(25)  ## good move means robot fitness increases
+                    p.changeFitness(200)  ## good move means robot fitness increases
 
             if(self.makeKing == True):
                 self.blueCheckers[self.blueCheckers.index(p.getFinalChecker())][0] = 2
                 if(p.isRobot()):
-                    p.changeFitness(15)
+                    p.changeFitness(350)
 
     
         else:
@@ -155,12 +159,12 @@ class checkerboardClass:
             if(jump):
                 self.blueCheckers.pop(capturedChecker)
                 if(p.isRobot()):
-                    p.changeFitness(25)
+                    p.changeFitness(200)
 
             if(self.makeKing == True):
                 self.redCheckers[self.redCheckers.index(p.getFinalChecker())][0] = 2
                 if(p.isRobot()):
-                    p.changeFitness(15)
+                    p.changeFitness(350)
         
 
 
