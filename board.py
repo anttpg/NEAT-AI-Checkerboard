@@ -14,6 +14,7 @@ class checkerboardClass:
     win = False
     p1 = type(None)
     p2 = type(None)
+    turnTimer = 0
 
     ##sets up who will be playing what and board configuration
     def __init__(self, boardConfig, red, blue, p1, p2):
@@ -33,7 +34,10 @@ class checkerboardClass:
             strng = [str(red) for red in self.redCheckers[i]]
             #strng.append(str(rand.randint(0,9)))
             a_string = "".join(strng)
-            final = ((int(a_string))/1000) - 2 
+            if(a_string != '-2-2-2'):
+                final = ((int(a_string))/1000)
+            else:
+                final = 0.75
             #CONVERTS IE 1359 (KING,Y,X,COLOR) to 1.359 for activation - 2 so that Gauss can properly work
 
             tempC.append(final)
@@ -45,12 +49,16 @@ class checkerboardClass:
             strng = [str(blue) for blue in self.blueCheckers[i]]
             
             #strng.append(str(rand.randint(0,9)))
+            
             a_string = "".join(strng)
-            final = ((int(a_string))/1000) - 2
+            if(a_string != '-2-2-2'):
+                final = ((int(a_string))/1000)
+            else:
+                final = 0.25
             #CONVERTS IE 1359 (KING,Y,X,COLOR) to 1.359 for activation - 2 so that Gauss can properly work
             
             tempC.append(final)
-            tempC.append(-1) # REPRESENTS BLUE
+            tempC.append(0.5) # REPRESENTS BLUE
 
         self.data = tempC
         return tempC
@@ -138,16 +146,14 @@ class checkerboardClass:
                                     moveList.append([originalChecker,copy(move)])
         
         
-        o = round(len(moveList)*netsOutput)
+        o = round(len(moveList)*(netsOutput))
+        if (len(moveList) == o):
+            o = o-1
+        if(moveList == []):
+            self.win = True
+            return
         p.setSelection(moveList[o][0], moveList[o][1]) 
        
-
-
-
-
-
-                    
-
 
 
     
@@ -190,13 +196,18 @@ class checkerboardClass:
         if self.legalChoice(p.getOriginalChecker(),p.getColor()): ##made for multi step moves, will run through recursion
             #print("choice is legal!")
             if(self.legalMove(p)): ##moving is built in to checking if it is legal
-                print("move is legal!")
+                #print("move is legal!")
                 self.makeKing = False
-                if(not self.redCheckers) or (not self.blueCheckers):
+                if(not self.redCheckers):
                     self.win = True
+                    self.p1.changeFitness(100)
+                if(not self.blueCheckers):
+                    self.win = True
+                    self.p2.changeFitness(100)
                 
                 p.giveData([self.redCheckers,self.blueCheckers])
                 self.switchTurn()
+                turnTimer += 1
             
         else:
             print("Sorry! That is not a legal move. Please follow the 135 format, [Rank + Y + X].")
@@ -226,6 +237,7 @@ class checkerboardClass:
         return False
 
 
+
     def switchTurn(self):
         if(self.currentTurn == "Blue"):
            self.currentTurn = "Red"
@@ -233,12 +245,13 @@ class checkerboardClass:
             self.currentTurn = "Blue"
 
 
+
     def makeMove(self, p, jump, capturedChecker):
         if(p.getColor() == "Blue"):
             self.blueCheckers[self.blueCheckers.index(p.getOriginalChecker())] = p.getFinalChecker() ##updates new checker position
 
             if(jump):
-                self.redCheckers[self.redCheckers.index(capturedChecker)] = [-2,-2,-2]
+                self.redCheckers[capturedChecker] = [-2,-2,-2]
                 if(p.isRobot()):
                     p.changeFitness(10)  ## good move means robot fitness increases
 
@@ -252,7 +265,7 @@ class checkerboardClass:
             self.redCheckers[self.redCheckers.index(p.getOriginalChecker())] = p.getFinalChecker()
 
             if(jump):
-                self.blueCheckers[self.blueCheckers.index(capturedChecker)] = [-2,-2,-2]
+                self.blueCheckers[capturedChecker] = [-2,-2,-2]
                 if(p.isRobot()):
                     p.changeFitness(10)
                     
@@ -318,13 +331,13 @@ class checkerboardClass:
                                 return False ##means there was no checker to jump. Return failed input
     
                         self.makeMove(p, True, capturedChecker)
-                        print("captured checker " + str(capturedChecker) + "! moved checker to " + str(p.getMove()) + "!") 
+                        #print("captured checker " + str(capturedChecker) + "! moved checker to " + str(p.getMove()) + "!") 
                         return True   
 
                     ##else just a normal move    
                     else:
                         self.makeMove(p, False, -1)
-                        print("moved checker to " + str(p.getMove()[0]) + str(p.getMove()[1]) + "!")
+                        #print("moved checker to " + str(p.getMove()[0]) + str(p.getMove()[1]) + "!")
                         return True 
 
         return False

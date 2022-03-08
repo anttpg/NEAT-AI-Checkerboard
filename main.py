@@ -113,34 +113,42 @@ def eval_genomes(genomes, config):
     #for each game, play through an entire game
     for g, game in enumerate(currentGames):
         while(game.win == False): ##while nobody has won, continue to run. 
-            
             if (game.currentTurn == "Blue"):
                 
                 output = nets[g].activate(game.refreshData()) ##Red checkers, blue checkers. BLUE CHECKER ROBOT
-                print(output[0])
+                #print(output[0]," Player 1", game.refreshData())
                 game.getSelection(game.p1,output[0])  
                 
-                print(game.p1.getOriginalChecker())
-                print(game.p1.getFinalChecker())
+                #print(game.p1.getOriginalChecker())
+                #print(game.p1.getFinalChecker())
 
-                game.turn(game.p1)
+                if(game.win == False and game.turnTimer < 50):
+                    game.turn(game.p1)
+                else:
+                    game.p2.changeFitness(15)
+                    break
 
 
 
             
             else:
+                #print(game.refreshData())
                 output = nets[g].activate(game.refreshData()) ##Red checkers, blue checkers. RED CHECKER ROBOT
                 game.getSelection(game.p2,output[0])  
-
-                print(game.p2.getOriginalChecker())
-                print(game.p2.getFinalChecker())
-
-                game.turn(game.p2)
+                #print(output[0]," Player 2")
+                #print(game.p2.getOriginalChecker())
+                #print(game.p2.getFinalChecker())
+                if(game.win == False and game.turnTimer < 50):
+                    game.turn(game.p2)
+                else:
+                    game.p1.changeFitness(15)
+                    break
+                
 
                 
             
-            time.sleep(0.5)
-            game.prettyBoard()
+            #time.sleep(0.5)
+            #game.prettyBoard()
                   
         fitnesses.append(game.p1.getFitness())
         fitnesses.append(game.p2.getFitness())
