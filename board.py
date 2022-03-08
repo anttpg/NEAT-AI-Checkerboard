@@ -1,6 +1,6 @@
 from sys import builtin_module_names
 import random as rand
-
+from copy import copy
 from robot import *
 from human import *
 
@@ -61,7 +61,13 @@ class checkerboardClass:
 
     
 
-    def getSelection(self):
+    def getSelection(self,p,netsOutput):
+        moveList = []
+        move = [0,0,0]
+        originalChecker = []
+        tempC = [1,-10,-10]
+        
+
         if self.currentTurn == "Blue":
             legalJumps = [[1,1],[2,2],[1,-1],[2,-2],[-1,-1],[-2,-2],[-1,1],[-2,2]]
         else:
@@ -70,9 +76,78 @@ class checkerboardClass:
         for y in range(8):
             for x in range(8):
                 if y % 2 == x % 2:
-                    if self.legalChoice([1,y+1,x+1],color):
-                        self.board[y][x] = "b"
-                    elif self.legalChoice([2,y+1,x+1],color):
+                    if self.legalChoice([1,y+1,x+1],self.currentTurn):
+                        originalChecker = [1,y+1,x+1]
+                        move[0] = 1
+
+                    elif self.legalChoice([2,y+1,x+1],self.currentTurn):
+                        originalChecker = [2,y+1,x+1]
+                        move[0] = 2
+                    else:
+                        continue
+                    
+                    
+
+                    for i in range(4 * originalChecker[0]):
+                        ##IE [1,(3+1),(5+1)]
+                        tempC[1] = originalChecker[1] + legalJumps[i][0]
+                        tempC[2] = originalChecker[2] + legalJumps[i][1]
+                        move[1] = originalChecker[1] + legalJumps[i][0]
+                        move[2] = originalChecker[2] + legalJumps[i][1]
+                        ##getMove() returns the move position IE [4,6]
+                        #print(tempC)
+                        if((move[1]!=0 and move[1]!=9) and 
+                            (move[2]!=0 and move[2]!=9)):
+                            ##Makes sure place chosen is free to prevent jumping on another checker
+                            if(not(  self.legalChoice( tempC, "Blue") or self.legalChoice( [2,tempC[1],tempC[2]], "Blue") 
+                                or self.legalChoice( tempC, "Red" ) or self.legalChoice( [2,tempC[1],tempC[2]], "Red" )  )):
+
+                                ##checks if its a jump move
+                                if(i % 2 == 1):
+                                    capturedChecker = None
+                                    try:
+                                        if(self.currentTurn == "Blue"):
+                                            capturedChecker = self.redCheckers.index([  1, move[1]-legalJumps[i-1][0], move[2]-legalJumps[i-1][1]  ])
+                                            
+                                        else:
+                                            capturedChecker = self.blueCheckers.index([  1, move[1]-legalJumps[i-1][0], move[2]-legalJumps[i-1][1]  ])
+                                        moveList.append([originalChecker,copy(move)])
+                                        moveList.append([originalChecker,copy(move)])
+                                        moveList.append([originalChecker,copy(move)])
+                                    except:
+                                        pass
+                                        
+
+                                    if(capturedChecker == None): 
+                                        try:
+                                            if(self.currentTurn == "Blue"):
+                                                capturedChecker = self.redCheckers.index([  2, move[1]-legalJumps[i-1][0], move[2]-legalJumps[i-1][1]  ])
+                                                
+                                            else:
+                                                capturedChecker = self.blueCheckers.index([  2, move[1]-legalJumps[i-1][0], move[2]-legalJumps[i-1][1]  ])
+                                            moveList.append([originalChecker,copy(move)])
+                                            moveList.append([originalChecker,copy(move)])
+                                            moveList.append([originalChecker,copy(move)])
+                                        except:
+                                            pass
+                                            ##means there was no checker to jump. Return failed input
+                                    
+
+                                ##else just a normal move    
+                                else:
+                                    moveList.append([originalChecker,copy(move)])
+        
+        
+        o = round(len(moveList)*netsOutput)
+        p.setSelection(moveList[o][0], moveList[o][1]) 
+       
+
+
+
+
+
+                    
+
 
 
     
@@ -96,6 +171,8 @@ class checkerboardClass:
 
             print(self.board[y][0],self.board[y][1],self.board[y][2],self.board[y][3],
                   self.board[y][4],self.board[y][5],self.board[y][6],self.board[y][7])
+        
+        print('')
             
         
 
@@ -122,10 +199,10 @@ class checkerboardClass:
                 self.switchTurn()
             
         else:
-            #print("Sorry! That is not a legal move. Please follow the 135 format, [Rank + Y + X].")
-            p.changeFitness(-1)
+            print("Sorry! That is not a legal move. Please follow the 135 format, [Rank + Y + X].")
+            #p.changeFitness(-1)
         p.resetChoice()
-        ##self.prettyBoard()
+        
         
 
 
@@ -161,28 +238,29 @@ class checkerboardClass:
             self.blueCheckers[self.blueCheckers.index(p.getOriginalChecker())] = p.getFinalChecker() ##updates new checker position
 
             if(jump):
-                self.redCheckers.pop(capturedChecker)
+                self.redCheckers[self.redCheckers.index(capturedChecker)] = [-2,-2,-2]
                 if(p.isRobot()):
-                    p.changeFitness(200)  ## good move means robot fitness increases
+                    p.changeFitness(10)  ## good move means robot fitness increases
 
             if(self.makeKing == True):
                 self.blueCheckers[self.blueCheckers.index(p.getFinalChecker())][0] = 2
                 if(p.isRobot()):
-                    p.changeFitness(350)
+                    p.changeFitness(25)
 
     
         else:
             self.redCheckers[self.redCheckers.index(p.getOriginalChecker())] = p.getFinalChecker()
 
             if(jump):
-                self.blueCheckers.pop(capturedChecker)
+                self.blueCheckers[self.blueCheckers.index(capturedChecker)] = [-2,-2,-2]
                 if(p.isRobot()):
-                    p.changeFitness(200)
+                    p.changeFitness(10)
+                    
 
             if(self.makeKing == True):
                 self.redCheckers[self.redCheckers.index(p.getFinalChecker())][0] = 2
                 if(p.isRobot()):
-                    p.changeFitness(350)
+                    p.changeFitness(25)
         
 
 

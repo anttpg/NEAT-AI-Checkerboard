@@ -38,25 +38,32 @@ class robot:
     def resetChoice(self): ##called at the end of each turn.
         self.choiceFrom = [-1,-1,-1]
         self.choiceTo = [-1,0,0]
-        
-    def requestSelection(self, f1, f2, t1, t2): 
-        if(self.color == "Red"):
-            if([1,f1,f2] in self.currentState[0]):
-                self.choiceFrom = [1,f1,f2]
-                self.choiceTo = [1,t1,t2]
-            elif([2,f1,f2] in self.currentState[0]):
-                self.choiceFrom = [2,f1,f2]
-                self.choiceTo = [2,t1,t2]
 
-        if(self.color == "Blue"):
-            if([1,f1,f2] in self.currentState[1]):
-                self.choiceFrom = [1,f1,f2]
-                self.choiceTo = [1,t1,t2]
-            elif([2,f1,f2] in self.currentState[1]):
-                self.choiceFrom = [2,f1,f2]
-                self.choiceTo = [2,t1,t2]
+    def setSelection(self,cF,cT):
+        self.choiceFrom = cF
+        self.choiceTo = cT
         
-    def isRobot():
+    # def requestSelection(self, f1, f2, t1, t2): 
+    #     if(self.color == "Red"):
+    #         if([1,f1,f2] in self.currentState[0]):
+    #             self.choiceFrom = [1,f1,f2]
+    #             self.choiceTo = [1,t1,t2]
+    #         elif([2,f1,f2] in self.currentState[0]):
+    #             self.choiceFrom = [2,f1,f2]
+    #             self.choiceTo = [2,t1,t2]
+
+    #     if(self.color == "Blue"):
+    #         if([1,f1,f2] in self.currentState[1]):
+    #             self.choiceFrom = [1,f1,f2]
+    #             self.choiceTo = [1,t1,t2]
+    #         elif([2,f1,f2] in self.currentState[1]):
+    #             self.choiceFrom = [2,f1,f2]
+    #             self.choiceTo = [2,t1,t2]
+
+    
+
+        
+    def isRobot(self):
         return True
 
 

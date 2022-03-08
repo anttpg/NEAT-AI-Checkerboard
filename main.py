@@ -6,7 +6,7 @@ import time
 
 
 ##CONFIGURE THE STARTING BOARD SETTINGS
-config = [
+board_config = [
 [[],[],[],[],[],[],[],[]],
 [[],[],[],[],[],[],[],[]],
 [[],[],[],[],[],[],[],[]],
@@ -20,7 +20,7 @@ config = [
 blue = [
 [1,1,1],[1,1,3],[1,1,5],[1,1,7],
 [1,2,2],[1,2,4],[1,2,6],[1,2,8],
-[2,5,3],[2,3,3],[1,3,5],[1,3,7]]
+[1,3,1],[1,3,3],[1,3,5],[1,3,7]]
 
 red = [
 [1,6,2],[1,6,4],[1,6,6],[1,6,8],
@@ -105,7 +105,7 @@ def eval_genomes(genomes, config):
     ##creates all the games 
     for r in range(len(robots)):  
         try:  
-            currentGames.append(checkerboardClass(config, red, blue, robots[r],robots[r+1]))
+            currentGames.append(checkerboardClass(board_config, red, blue, robots[r],robots[r+1]))
         except:
             print("")
         r+=1
@@ -117,15 +117,30 @@ def eval_genomes(genomes, config):
             if (game.currentTurn == "Blue"):
                 
                 output = nets[g].activate(game.refreshData()) ##Red checkers, blue checkers. BLUE CHECKER ROBOT
-                game.getSelection(output)       
+                print(output[0])
+                game.getSelection(game.p1,output[0])  
+                
+                print(game.p1.getOriginalChecker())
+                print(game.p1.getFinalChecker())
+
                 game.turn(game.p1)
+
 
 
             
             else:
                 output = nets[g].activate(game.refreshData()) ##Red checkers, blue checkers. RED CHECKER ROBOT
-                game.getSelection(output)  
+                game.getSelection(game.p2,output[0])  
+
+                print(game.p2.getOriginalChecker())
+                print(game.p2.getFinalChecker())
+
                 game.turn(game.p2)
+
+                
+            
+            time.sleep(0.5)
+            game.prettyBoard()
                   
         fitnesses.append(game.p1.getFitness())
         fitnesses.append(game.p2.getFitness())
