@@ -2,6 +2,7 @@ from tkinter import *
 from board import *
 import neat
 import os
+import random
 import time
 
 
@@ -76,7 +77,9 @@ root.mainloop()
 
 def eval_genomes(genomes, config):
     global robots, geno, nets, currentGames
-    robots = []
+    blueRobots = []
+    redRobots = []
+    allRobots = []
     geno = []
     nets = []
     currentGames = []
@@ -86,18 +89,21 @@ def eval_genomes(genomes, config):
         ##creates the robots
         if i % 2 == 0:
             global robot
-            robots.append(robot("Blue", [red,blue],i))
+            r = robot("Blue", [red,blue],i)
         else:
-            robots.append(robot("Red" , [red,blue],i))
+            r =robot("Red" , [red,blue],i))
         i+=1
+        blueRobots.append(r)
+        redRobots.append(r)
+        allRobots.append(r)
 
         geno.append(genome)
         net = neat.nn.FeedForwardNetwork.create(genome, config)
         nets.append(net)
         genome.fitness = 0
 
-        
-    for g, robot in enumerate(robots):
+
+    for g, robot in enumerate(allRobots):
         geno[g].fitness = robot.getFitness()
     
                 
@@ -105,7 +111,7 @@ def eval_genomes(genomes, config):
     ##creates all the games 
     for r in range(len(robots)):  
         try:  
-            currentGames.append(checkerboardClass(board_config, red, blue, robots[r],robots[r+1]))
+            currentGames.append(checkerboardClass(board_config, red, blue, blueRobots[r],redRobots[r]))
         except:
             print("")
         r+=1
@@ -115,14 +121,14 @@ def eval_genomes(genomes, config):
         while(game.win == False): ##while nobody has won, continue to run. 
             if (game.currentTurn == "Blue"):
                 
-                output = nets[g].activate(game.refreshData()) ##Red checkers, blue checkers. BLUE CHECKER ROBOT
-                #print(output[0]," Player 1", game.refreshData())
-                game.getSelection(game.p1,output[0])  
+                output = nets[g].activate(game.refreshData()) 
+                print(output,(output[0] + output[1] + output[2] + output[3])/4, " Player 1")
+                game.getSelection(game.p1,output)  
                 
-                #print(game.p1.getOriginalChecker())
-                #print(game.p1.getFinalChecker())
+                print(game.p1.getOriginalChecker())
+                print(game.p1.getFinalChecker())
 
-                if(game.win == False and game.turnTimer < 50):
+                if(game.win == False and game.turnTimer < 125):
                     game.turn(game.p1)
                 else:
                     game.p2.changeFitness(15)
@@ -132,31 +138,35 @@ def eval_genomes(genomes, config):
 
             
             else:
-                #print(game.refreshData())
-                output = nets[g].activate(game.refreshData()) ##Red checkers, blue checkers. RED CHECKER ROBOT
-                game.getSelection(game.p2,output[0])  
-                #print(output[0]," Player 2")
-                #print(game.p2.getOriginalChecker())
-                #print(game.p2.getFinalChecker())
-                if(game.win == False and game.turnTimer < 50):
+                output = nets[g].activate(game.refreshData()) ##Red checkers, blue checkers. BLUE CHECKER ROBOT
+                print(output, " Player 2")
+                game.getSelection(game.p2,output)  
+                
+                print(game.p2.getOriginalChecker())
+                print(game.p2.getFinalChecker())
+
+                if(game.win == False and game.turnTimer < 125):
                     game.turn(game.p2)
                 else:
                     game.p1.changeFitness(15)
                     break
                 
-
+            
                 
             
             #time.sleep(0.5)
-            #game.prettyBoard()
+            game.prettyBoard()
                   
         fitnesses.append(game.p1.getFitness())
         fitnesses.append(game.p2.getFitness())
+    random.shuffle(blueRobots)
+    random.shuffle(redRobots)
 
 
         
 
 def run_neat(config_path):
+    # Load configuration.
     config = neat.config.Config(
         neat.DefaultGenome,
         neat.DefaultReproduction,
@@ -164,15 +174,19 @@ def run_neat(config_path):
         neat.DefaultStagnation,
         config_path
     )
-
+    # Create the population, which is the top-level object for a NEAT run.
     pop = neat.Population(config)
 
+    # Add a stdout reporter to show progress in the terminal.
     pop.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     pop.add_reporter(stats)
 
-    pop.run(eval_genomes, 15) #number of runs
+    # Run for up to 300 generations.
+    winner = pop.run(eval_genomes, 15) #number of runs
 
+    # Display the winning genome.
+    print('\nBest genome:\n{!s}'.format(winner))
     
     # print("-----------------------------")
     # print("  Current generation: " + pop.generation+1)

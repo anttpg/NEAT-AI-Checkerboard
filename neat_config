@@ -48,7 +48,7 @@ node_delete_prob        = 0.2
 num_hidden              = 7 
 num_inputs              = 48 
 #Red Checkers, Blue Checkers
-num_outputs             = 1 
+num_outputs             = 4 
 #Original X,Y; move X,Y
 
 # node response options
