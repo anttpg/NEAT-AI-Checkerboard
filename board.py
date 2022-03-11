@@ -24,7 +24,8 @@ class checkerboardClass:
         self.p1 = p1
         self.p2 = p2
 
-        
+    def getTurn(self):
+        return self.turnTimer
         
         
     def refreshData(self):

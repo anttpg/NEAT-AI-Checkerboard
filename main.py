@@ -1,3 +1,4 @@
+from math import e, sin
 from tkinter import *
 from board import *
 import neat
@@ -29,7 +30,7 @@ red = [
 [1,8,2],[1,8,4],[1,8,6],[1,8,8]]
 
 gameType = None
-fitnesses = []
+
 
 #Gets the size of the screen being used.
 def get_display_size():
@@ -75,14 +76,16 @@ root.mainloop()
 
 
 
+
 def eval_genomes(genomes, config):
-    global robots, geno, nets, currentGames
+    global geno, nets, currentGames, fitnesses
     blueRobots = []
     redRobots = []
     allRobots = []
     geno = []
     nets = []
     currentGames = []
+    fitnesses = []
     i = 0
 
     for id, genome in genomes:
@@ -90,11 +93,11 @@ def eval_genomes(genomes, config):
         if i % 2 == 0:
             global robot
             r = robot("Blue", [red,blue],i)
+            blueRobots.append(r)
         else:
-            r =robot("Red" , [red,blue],i))
+            r =robot("Red" , [red,blue],i)
+            redRobots.append(r)
         i+=1
-        blueRobots.append(r)
-        redRobots.append(r)
         allRobots.append(r)
 
         geno.append(genome)
@@ -109,7 +112,7 @@ def eval_genomes(genomes, config):
                 
 
     ##creates all the games 
-    for r in range(len(robots)):  
+    for r in range(len(allRobots)):  
         try:  
             currentGames.append(checkerboardClass(board_config, red, blue, blueRobots[r],redRobots[r]))
         except:
@@ -156,13 +159,22 @@ def eval_genomes(genomes, config):
             
             #time.sleep(0.5)
             game.prettyBoard()
-                  
+        game.p1.changeFitness((-0.1)*game.getTurn())
+        game.p2.changeFitness((-0.1)*game.getTurn())
+
         fitnesses.append(game.p1.getFitness())
         fitnesses.append(game.p2.getFitness())
     random.shuffle(blueRobots)
     random.shuffle(redRobots)
 
 
+def mod_sigmoid(x):
+        if x == 0:
+            return 0
+        elif x == 1:
+            return 1
+        else:
+            return (1/(1+((e)**(5-(10*x)))))
         
 
 def run_neat(config_path):
@@ -174,6 +186,12 @@ def run_neat(config_path):
         neat.DefaultStagnation,
         config_path
     )
+    
+
+    config.genome_config.add_activation('modified_sigmoid', mod_sigmoid)   
+
+
+
     # Create the population, which is the top-level object for a NEAT run.
     pop = neat.Population(config)
 
