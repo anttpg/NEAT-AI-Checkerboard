@@ -24,7 +24,8 @@ class checkerboardClass:
         self.p1 = p1
         self.p2 = p2
 
-        
+    def getTurn(self):
+        return self.turnTimer
         
         
     def refreshData(self):
@@ -146,7 +147,7 @@ class checkerboardClass:
                                     moveList.append([originalChecker,copy(move)])
         
         
-        o = round(len(moveList)*(netsOutput))
+        o = round(len(moveList)*((netsOutput[0] + netsOutput[1] + netsOutput[2] + netsOutput[3])/4))
         if (len(moveList) == o):
             o = o-1
         if(moveList == []):
@@ -207,7 +208,7 @@ class checkerboardClass:
                 
                 p.giveData([self.redCheckers,self.blueCheckers])
                 self.switchTurn()
-                turnTimer += 1
+                self.turnTimer += 1
             
         else:
             print("Sorry! That is not a legal move. Please follow the 135 format, [Rank + Y + X].")
