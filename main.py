@@ -1,4 +1,5 @@
 from math import e, sin
+from pickletools import int4
 from tkinter import *
 from board import *
 from extra_vars import *
@@ -31,7 +32,8 @@ red = [
 [1,7,1],[1,7,3],[1,7,5],[1,7,7],
 [1,8,2],[1,8,4],[1,8,6],[1,8,8]]
 
-gameType = None
+
+count = 0
 
 
 #Gets the size of the screen being used.
@@ -88,6 +90,7 @@ def eval_genomes(genomes, config):
     nets = []
     currentGames = []
     fitnesses = []
+    count += 1
 
 
     
@@ -169,11 +172,11 @@ def eval_genomes(genomes, config):
                 
             
             #time.sleep(0.5)
-            game.prettyBoard()
-        game.p1.changeFitness((-0.1)*game.getTurn())
-        game.p2.changeFitness((-0.1)*game.getTurn())
-        fitnesses.append(game.p1.getFitness())
-        fitnesses.append(game.p2.getFitness())
+        game.prettyBoard()
+        game.p1.changeFitness(int((-0.01)*game.getTurn()))
+        game.p2.changeFitness(int((-0.01)*game.getTurn()))
+        geno[(g*2)-1].fitness += (int((geno[g*2].fitness)/count) - game.p1.getFitness())
+        geno[g*2].fitness += game.p2.getFitness()
         
 
     random.shuffle(blueRobots)

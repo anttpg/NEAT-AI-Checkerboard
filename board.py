@@ -263,12 +263,12 @@ class checkerboardClass:
             if(jump):
                 self.redCheckers[capturedChecker] = [-2,-2,-2]
                 if(p.isRobot()):
-                    p.changeFitness(10)  ## good move means robot fitness increases
+                    p.changeFitness(5)  ## good move means robot fitness increases
 
             if(self.makeKing == True):
                 self.blueCheckers[self.blueCheckers.index(p.getFinalChecker())][0] = 2
                 if(p.isRobot()):
-                    p.changeFitness(25)
+                    p.changeFitness(10)
 
     
         else:
@@ -277,13 +277,13 @@ class checkerboardClass:
             if(jump):
                 self.blueCheckers[capturedChecker] = [-2,-2,-2]
                 if(p.isRobot()):
-                    p.changeFitness(10)
+                    p.changeFitness(5)
                     
 
             if(self.makeKing == True):
                 self.redCheckers[self.redCheckers.index(p.getFinalChecker())][0] = 2
                 if(p.isRobot()):
-                    p.changeFitness(25)
+                    p.changeFitness(10)
         
 
 
