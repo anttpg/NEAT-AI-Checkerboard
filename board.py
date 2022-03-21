@@ -1,7 +1,7 @@
 from sys import builtin_module_names
 import random as rand
 from copy import copy
-from robot import *
+from Robot import *
 from human import *
 
 class checkerboardClass:

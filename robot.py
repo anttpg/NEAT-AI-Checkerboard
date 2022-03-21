@@ -1,6 +1,6 @@
 import random
 
-class robot:
+class Robot:
     color = ""
     currentState = []
     name = -1
@@ -58,3 +58,4 @@ class robot:
 
     def getName(self):
         return self.name
+

@@ -1,10 +1,12 @@
 from math import e, sin
 from tkinter import *
 from board import *
+from extra_vars import *
 import neat
 import os
 import random
 import time
+import copy
 
 
 ##CONFIGURE THE STARTING BOARD SETTINGS
@@ -30,7 +32,7 @@ red = [
 [1,8,2],[1,8,4],[1,8,6],[1,8,8]]
 
 gameType = None
-runOnce = False
+
 
 #Gets the size of the screen being used.
 def get_display_size():
@@ -87,22 +89,22 @@ def eval_genomes(genomes, config):
     currentGames = []
     fitnesses = []
 
+
     
     i = 0
 
     for id, genome in genomes:
         ##creates the robots
-        if(runOnce == False):
-            if i % 2 == 0:
-                global robot
-                r = robot("Blue", [red,blue],i)
-                blueRobots.append(r)
-            else:
-                r =robot("Red" , [red,blue],i)
-                redRobots.append(r)
+    
+        if i % 2 == 0:
+            r = Robot("Blue", [red,blue],i)
+            blueRobots.append(r)
+        else:
+            r = Robot("Red" , [red,blue],i)
+            redRobots.append(r)
 
-            i+=1
-            allRobots.append(r)
+        i+=1
+        allRobots.append(r)
 
         geno.append(genome)
         net = neat.nn.FeedForwardNetwork.create(genome, config)
@@ -118,15 +120,15 @@ def eval_genomes(genomes, config):
                 
 
     ##creates all the games 
-    if(runOnce == False):
-        for r in range(len(allRobots)):  
-            try:  
-                currentGames.append(checkerboardClass(board_config, red, blue, blueRobots[r],redRobots[r]))
-            except:
-                print("")
-            r+=1
 
-    runOnce = True
+    for r in range(len(allRobots)):  
+        try:  
+            currentGames.append(checkerboardClass(copy.deepcopy(board_config), copy.deepcopy(red), copy.deepcopy(blue), blueRobots[r],redRobots[r]))
+        except:
+            print("")
+        r+=1
+
+
     
     #for each game, play through an entire game
     for g, game in enumerate(currentGames):
@@ -167,7 +169,7 @@ def eval_genomes(genomes, config):
                 
             
             #time.sleep(0.5)
-        game.prettyBoard()
+            game.prettyBoard()
         game.p1.changeFitness((-0.1)*game.getTurn())
         game.p2.changeFitness((-0.1)*game.getTurn())
         fitnesses.append(game.p1.getFitness())
