@@ -12,7 +12,7 @@ class robot:
     def __init__(self,c,data,n):
         self.color = c
         self.currentState = data
-        name = n
+        self.name = n
 
     def giveData(self,data): ##sets the current state of the board 
         self.currentState = data
@@ -22,18 +22,10 @@ class robot:
 
     def getFitness(self):
         return self.fitness
+        
+    def resetFitness(self):
+        self.fitness = 0
 
-    # def getData(self):
-    #     tempC = []
-    #     for i in range(len(self.currentState[0])):
-    #         self.currentState[0][i].append(-3)
-    #         tempC.append(self.currentState[0][i])
-
-    #     for i in range(len(self.currentState[1])):
-    #         self.currentState[1][i].append(-4)
-    #         tempC.append(self.currentState[1][i])
-    #     tempC.ravel()
-    #     return tempC
 
     def resetChoice(self): ##called at the end of each turn.
         self.choiceFrom = [-1,-1,-1]
@@ -43,25 +35,6 @@ class robot:
         self.choiceFrom = cF
         self.choiceTo = cT
         
-    # def requestSelection(self, f1, f2, t1, t2): 
-    #     if(self.color == "Red"):
-    #         if([1,f1,f2] in self.currentState[0]):
-    #             self.choiceFrom = [1,f1,f2]
-    #             self.choiceTo = [1,t1,t2]
-    #         elif([2,f1,f2] in self.currentState[0]):
-    #             self.choiceFrom = [2,f1,f2]
-    #             self.choiceTo = [2,t1,t2]
-
-    #     if(self.color == "Blue"):
-    #         if([1,f1,f2] in self.currentState[1]):
-    #             self.choiceFrom = [1,f1,f2]
-    #             self.choiceTo = [1,t1,t2]
-    #         elif([2,f1,f2] in self.currentState[1]):
-    #             self.choiceFrom = [2,f1,f2]
-    #             self.choiceTo = [2,t1,t2]
-
-    
-
         
     def isRobot(self):
         return True

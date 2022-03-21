@@ -30,7 +30,7 @@ red = [
 [1,8,2],[1,8,4],[1,8,6],[1,8,8]]
 
 gameType = None
-
+runOnce = False
 
 #Gets the size of the screen being used.
 def get_display_size():
@@ -78,7 +78,7 @@ root.mainloop()
 
 
 def eval_genomes(genomes, config):
-    global geno, nets, currentGames, fitnesses
+    global geno, nets, fitnesses, currentGames, redRobots, blueRobots, allRobots
     blueRobots = []
     redRobots = []
     allRobots = []
@@ -86,24 +86,30 @@ def eval_genomes(genomes, config):
     nets = []
     currentGames = []
     fitnesses = []
+
+    
     i = 0
 
     for id, genome in genomes:
         ##creates the robots
-        if i % 2 == 0:
-            global robot
-            r = robot("Blue", [red,blue],i)
-            blueRobots.append(r)
-        else:
-            r =robot("Red" , [red,blue],i)
-            redRobots.append(r)
-        i+=1
-        allRobots.append(r)
+        if(runOnce == False):
+            if i % 2 == 0:
+                global robot
+                r = robot("Blue", [red,blue],i)
+                blueRobots.append(r)
+            else:
+                r =robot("Red" , [red,blue],i)
+                redRobots.append(r)
+
+            i+=1
+            allRobots.append(r)
 
         geno.append(genome)
         net = neat.nn.FeedForwardNetwork.create(genome, config)
         nets.append(net)
         genome.fitness = 0
+
+    
 
 
     for g, robot in enumerate(allRobots):
@@ -112,12 +118,15 @@ def eval_genomes(genomes, config):
                 
 
     ##creates all the games 
-    for r in range(len(allRobots)):  
-        try:  
-            currentGames.append(checkerboardClass(board_config, red, blue, blueRobots[r],redRobots[r]))
-        except:
-            print("")
-        r+=1
+    if(runOnce == False):
+        for r in range(len(allRobots)):  
+            try:  
+                currentGames.append(checkerboardClass(board_config, red, blue, blueRobots[r],redRobots[r]))
+            except:
+                print("")
+            r+=1
+
+    runOnce = True
     
     #for each game, play through an entire game
     for g, game in enumerate(currentGames):
@@ -125,11 +134,11 @@ def eval_genomes(genomes, config):
             if (game.currentTurn == "Blue"):
                 
                 output = nets[g].activate(game.refreshData()) 
-                print(output,(output[0] + output[1] + output[2] + output[3])/4, " Player 1")
+                #print(output,(output[0] + output[1] + output[2] + output[3])/4, " Player 1")
                 game.getSelection(game.p1,output)  
                 
-                print(game.p1.getOriginalChecker())
-                print(game.p1.getFinalChecker())
+                #print(game.p1.getOriginalChecker())
+                #print(game.p1.getFinalChecker())
 
                 if(game.win == False and game.turnTimer < 125):
                     game.turn(game.p1)
@@ -142,11 +151,11 @@ def eval_genomes(genomes, config):
             
             else:
                 output = nets[g].activate(game.refreshData()) ##Red checkers, blue checkers. BLUE CHECKER ROBOT
-                print(output, " Player 2")
+                #print(output, " Player 2")
                 game.getSelection(game.p2,output)  
                 
-                print(game.p2.getOriginalChecker())
-                print(game.p2.getFinalChecker())
+                #print(game.p2.getOriginalChecker())
+                #print(game.p2.getFinalChecker())
 
                 if(game.win == False and game.turnTimer < 125):
                     game.turn(game.p2)
@@ -158,12 +167,13 @@ def eval_genomes(genomes, config):
                 
             
             #time.sleep(0.5)
-            game.prettyBoard()
+        game.prettyBoard()
         game.p1.changeFitness((-0.1)*game.getTurn())
         game.p2.changeFitness((-0.1)*game.getTurn())
-
         fitnesses.append(game.p1.getFitness())
         fitnesses.append(game.p2.getFitness())
+        
+
     random.shuffle(blueRobots)
     random.shuffle(redRobots)
 

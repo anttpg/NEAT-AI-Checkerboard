@@ -26,6 +26,15 @@ class checkerboardClass:
 
     def getTurn(self):
         return self.turnTimer
+    
+
+    def reset(self):
+        self.p1.resetChoice()
+        self.p2.resetChoice()
+        self.p1.resetFitness()
+        self.p2.resetFitness()
+        
+
         
         
     def refreshData(self):
