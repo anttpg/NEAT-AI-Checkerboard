@@ -1,7 +1,7 @@
 from tkinter import *
 import random
 
-class human:
+class Human:
     color = ""
     currentState = []
 

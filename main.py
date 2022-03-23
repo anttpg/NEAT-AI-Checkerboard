@@ -1,12 +1,13 @@
 from math import e, sin
 from pickletools import int4
 from tkinter import *
-from board import *
+from Board import *
 from extra_vars import *
 import neat
 import os
 import random
-import time
+import visualize
+import pickle
 import copy
 
 
@@ -34,6 +35,7 @@ red = [
 
 
 count = 0
+fitnesses = [0]*10000
 
 
 #Gets the size of the screen being used.
@@ -76,20 +78,14 @@ def multiFunky(players):
 root.mainloop()
 
 
-##first paramater; True Human is red | False Human is Blue | None no Humans
-
-
-
-
 def eval_genomes(genomes, config):
-    global geno, nets, fitnesses, currentGames, redRobots, blueRobots, allRobots
+    global geno, nets, fitnesses, currentGames, redRobots, blueRobots, allRobots, count
     blueRobots = []
     redRobots = []
     allRobots = []
     geno = []
     nets = []
     currentGames = []
-    fitnesses = []
     count += 1
 
 
@@ -112,13 +108,13 @@ def eval_genomes(genomes, config):
         geno.append(genome)
         net = neat.nn.FeedForwardNetwork.create(genome, config)
         nets.append(net)
-        genome.fitness = 0
+        genome.fitness = 2
 
     
 
 
     for g, robot in enumerate(allRobots):
-        geno[g].fitness = robot.getFitness()
+        geno[g].fitness += fitnesses[g-1]
     
                 
 
@@ -128,7 +124,8 @@ def eval_genomes(genomes, config):
         try:  
             currentGames.append(checkerboardClass(copy.deepcopy(board_config), copy.deepcopy(red), copy.deepcopy(blue), blueRobots[r],redRobots[r]))
         except:
-            print("")
+            pass
+            geno[g].fitness = 0
         r+=1
 
 
@@ -172,11 +169,23 @@ def eval_genomes(genomes, config):
                 
             
             #time.sleep(0.5)
-        game.prettyBoard()
-        game.p1.changeFitness(int((-0.01)*game.getTurn()))
-        game.p2.changeFitness(int((-0.01)*game.getTurn()))
-        geno[(g*2)-1].fitness += (int((geno[g*2].fitness)/count) - game.p1.getFitness())
-        geno[g*2].fitness += game.p2.getFitness()
+        #game.prettyBoard()
+        game.p1.changeFitness((-0.01)*game.getTurn())
+        game.p2.changeFitness((-0.01)*game.getTurn())
+        p1f = game.p1.getFitness()
+        p2f = game.p2.getFitness()
+
+        geno[(g*2)-1].fitness += ((p1f/abs(p1f-p2f))+(p1f/3)) if (p1f-p2f) != 0 else (p1f/3)
+        geno[  g*2  ].fitness += ((p2f/abs(p2f-p1f))+(p2f/3)) if (p2f-p1f) != 0 else (p2f/3)
+        fitnesses[(g*2)-1] = geno[(g*2)-1].fitness
+        fitnesses[  g*2  ] = geno[  g*2  ].fitness
+        
+        # if (p1f/abs(p1f-p2f)) < 0:
+        #     raise ValueError("ERROR: fitness for p1 is negative (" + (p1f/abs(p1f-p2f)) + ")")
+        # if (p2f/abs(p2f-p1f)) < 0:
+        #     raise ValueError("ERROR: fitness for p2 is negative (" + (p2f/abs(p2f-p1f)) + ")")     
+        
+        #int((geno[  g*2  ].fitness)/count)
         
 
     random.shuffle(blueRobots)
@@ -214,20 +223,29 @@ def run_neat(config_path):
     pop.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     pop.add_reporter(stats)
+    pop.add_reporter(neat.Checkpointer(5))
 
-    # Run for up to 300 generations.
-    winner = pop.run(eval_genomes, 15) #number of runs
+
+    runs = 5
+    # Run for up to R(100,000) generations.
+    winner = pop.run(eval_genomes, runs) #number of runs
+    with open("best genome %d runs.pkl"%runs, "wb") as f:
+        pickle.dump(winner, f)
+        f.close()
 
     # Display the winning genome.
-    print('\nBest genome:\n{!s}'.format(winner))
+    #print('\nBest genome:\n{!s}'.format(winner))
     
-    # print("-----------------------------")
-    # print("  Current generation: " + pop.generation+1)
-    # best = -9999
-    # for i in range(len(fitnesses)):
-    #     if fitnesses[i] > best:
-    #         best = fitnesses[i]
-    # print("  Best Fitness Score: " + best)
+    # Show output of the most fit genome against training data.
+    node_names = {}
+    visualize.draw_net(config, winner, True, node_names=node_names)
+    visualize.plot_stats(stats, ylog=False, view=True)
+    visualize.plot_species(stats, view=True)
+
+
+    #how to load from an old training file.
+    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-4')
+    p.run(eval_genomes, 10)
 
 
 

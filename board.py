@@ -2,7 +2,7 @@ from sys import builtin_module_names
 import random as rand
 from copy import copy
 from Robot import *
-from human import *
+from Human import *
 
 class checkerboardClass:
     redCheckers = []
@@ -210,10 +210,10 @@ class checkerboardClass:
                 self.makeKing = False
                 if(not self.redCheckers):
                     self.win = True
-                    self.p1.changeFitness(100)
+                    self.p1.changeFitness(5)
                 if(not self.blueCheckers):
                     self.win = True
-                    self.p2.changeFitness(100)
+                    self.p2.changeFitness(5)
                 
                 p.giveData([self.redCheckers,self.blueCheckers])
                 self.switchTurn()
@@ -263,12 +263,12 @@ class checkerboardClass:
             if(jump):
                 self.redCheckers[capturedChecker] = [-2,-2,-2]
                 if(p.isRobot()):
-                    p.changeFitness(5)  ## good move means robot fitness increases
+                    p.changeFitness(1)  ## good move means robot fitness increases
 
             if(self.makeKing == True):
                 self.blueCheckers[self.blueCheckers.index(p.getFinalChecker())][0] = 2
                 if(p.isRobot()):
-                    p.changeFitness(10)
+                    p.changeFitness(2)
 
     
         else:
@@ -277,13 +277,13 @@ class checkerboardClass:
             if(jump):
                 self.blueCheckers[capturedChecker] = [-2,-2,-2]
                 if(p.isRobot()):
-                    p.changeFitness(5)
+                    p.changeFitness(1)
                     
 
             if(self.makeKing == True):
                 self.redCheckers[self.redCheckers.index(p.getFinalChecker())][0] = 2
                 if(p.isRobot()):
-                    p.changeFitness(10)
+                    p.changeFitness(2)
         
 
 
@@ -326,7 +326,7 @@ class checkerboardClass:
                                 capturedChecker = self.blueCheckers.index( self.getJumpedChecker(1,p,legalJumps,i) )
                             #print(capturedChecker)
                         except:
-                            print("failed to find checker to jump!")
+                            pass
                             
 
                         if(capturedChecker == None): 
@@ -336,8 +336,8 @@ class checkerboardClass:
                                 else:
                                     capturedChecker = self.blueCheckers.index( self.getJumpedChecker(2,p,legalJumps,i) )
                                 #print(capturedChecker)
-                            except:
-                                print("failed to find checker to jump!")
+                            except ValueError:
+                                raise ValueError("Could not find checker to jump.") from None
                                 return False ##means there was no checker to jump. Return failed input
     
                         self.makeMove(p, True, capturedChecker)
