@@ -2,7 +2,6 @@ from math import e, sin
 from pickletools import int4
 from tkinter import *
 from Board import *
-from extra_vars import *
 import neat
 import os
 import random
@@ -223,10 +222,10 @@ def run_neat(config_path):
     pop.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     pop.add_reporter(stats)
-    pop.add_reporter(neat.Checkpointer(5))
+    pop.add_reporter(neat.Checkpointer(100))
 
 
-    runs = 5
+    runs = 100000
     # Run for up to R(100,000) generations.
     winner = pop.run(eval_genomes, runs) #number of runs
     with open("best genome %d runs.pkl"%runs, "wb") as f:
@@ -244,8 +243,8 @@ def run_neat(config_path):
 
 
     #how to load from an old training file.
-    p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-4')
-    p.run(eval_genomes, 10)
+    #p = neat.Checkpointer.restore_checkpoint('neat-checkpoint-4')
+    #p.run(eval_genomes, 10)
 
 
 
