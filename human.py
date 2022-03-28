@@ -7,6 +7,7 @@ class Human:
 
     choiceFrom = [-1,-1,-1]
     choiceTo = [-1,0,0]
+    fitness = 0
 
 
     def __init__(self,c,data):
@@ -31,6 +32,18 @@ class Human:
 
     def isRobot():
         return False
+
+
+
+    def changeFitness(self,f):
+        self.fitness += f
+
+    def getFitness(self):
+        return self.fitness
+        
+    def resetFitness(self):
+        self.fitness = 0
+
 
 
     def getOriginalChecker(self):
