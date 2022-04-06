@@ -1,9 +1,6 @@
 import random
 
 class Robot:
-    color = ""
-    currentState = []
-    name = -1
     choiceFrom = [-1,-1,-1]
     choiceTo = [-1,0,0]
     fitness = 0

@@ -2,17 +2,15 @@ from tkinter import *
 import random
 
 class Human:
-    color = ""
-    currentState = []
-
     choiceFrom = [-1,-1,-1]
     choiceTo = [-1,0,0]
     fitness = 0
 
 
-    def __init__(self,c,data):
+    def __init__(self,c,data,n):
         self.color = c
         self.currentState = data
+        self.name = n
 
     def giveData(self,data): ##sets the current state of the board 
         self.currentState = data 

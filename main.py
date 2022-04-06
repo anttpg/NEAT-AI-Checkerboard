@@ -128,6 +128,7 @@ def eval_genomes(genomes, config):
 
     i = 0
     if(len(genomes) == 1):
+        print(genomes)
         net = neat.nn.FeedForwardNetwork.create(genomes[0], config)
 
         while(oneGame.win == False): ##while nobody has won, continue to run. 
@@ -196,6 +197,7 @@ def eval_genomes(genomes, config):
             allRobots.append(r)
 
             geno.append(genome)
+            print(geno)
             net = neat.nn.FeedForwardNetwork.create(genome, config)
             nets.append(net)
             if(genome.fitness == None): 
@@ -310,7 +312,28 @@ def run_neat(config_path):
 
     # Create the population, which is the top-level object for a NEAT run.
     #pop = neat.Checkpointer.restore_checkpoint('LaptopCheckpointV2-11934')
-    pop = neat.Population(config)
+    pop = type(None)
+
+    if(gameType != 5):
+        pop = neat.Checkpointer.restore_checkpoint('LaptopCheckpointV2-11934')
+        #for g in itervalues(pop.population):
+         #   print(g.fitness)
+       # print("Bestc: " + str(pop.best_genome))
+        print(str(type(pop.species)) + " ***************************************")
+        best_genome = None
+        for i in pop.population.values():
+            if best_genome == None or (i.fitness != None and best_genome.fitness < i.fitness):
+                best_genome = i
+        #print(best_genome)
+        single_genome()
+        print(str(pop.population) + "\n GENERATION: " + str(pop.generation) + "\n SPECIES: " + str(pop.species))
+
+        pop = neat.Population(config, [
+            {best_genome.key: best_genome}, pop.species, pop.generation])
+        
+
+    else:
+        pop = neat.Population(config)
 
     # Add a stdout reporter to show progress in the terminal.
     pop.add_reporter(neat.StdOutReporter(True))
@@ -337,27 +360,14 @@ def run_neat(config_path):
     visualize.plot_species(stats, view=True)
 
 
-    #how to load from an old training file.
-    
-    #p.run(eval_genomes, 10)
-    ##wat? how the fuck am i supposed to use created genome? look how to use w o having to train.
-
 
 
 if (__name__ == '__main__'):
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, 'neat_config')
-    if(gameType == 5):
-        run_neat(config_path)
+    run_neat(config_path)
 
-    if(gameType != 5):
-        p = neat.Checkpointer.restore_checkpoint('LaptopCheckpointV2-11934')
-        #for g in itervalues(p.population):
-        #    print(g.fitness)
-        print("Bestc: " + str(p.best_genome))
-
-        
-        single_genome()
+    
  
 
     

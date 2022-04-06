@@ -5,15 +5,10 @@ from Robot import *
 from Human import *
 
 class checkerboardClass:
-    redCheckers = []
-    blueCheckers = []
-    board = []
     data = []
     currentTurn = "Blue"
     makeKing = False
     win = False
-    p1 = type(None)
-    p2 = type(None)
     turnTimer = 0
 
     ##sets up who will be playing what and board configuration
