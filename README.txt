@@ -7,6 +7,7 @@ Included is a pretrained network to play against, but you may customize and trai
 
 Currently it has a pop size of 2, and will run until the fitness threshold reaches 100,000 points.
 The fitness evaluation function is not designed for small starting populations, so the training will complete relativly quickly.
+Once trained, edit the filepath at the bottom of main.py to your saved checkpoint-file, and you can now play against it.
 
 Dependencies: 
 NEAT; install here https://neat-python.readthedocs.io/en/latest/installation.html
