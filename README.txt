@@ -8,7 +8,9 @@ Included is a pretrained network to play against, but you may customize and trai
 Currently it has a pop size of 2, and will run until the fitness threshold reaches 100,000 points.
 The fitness evaluation function is not designed for small starting populations, so the training will complete relativly quickly.
 
-Requires GraphViz for trainer to properly display winning genome.
-You can check if you have dot installed by trying dot -V in the terminal. 
-If it is erroring, please refer to here https://graphviz.readthedocs.io/en/stable/manual.html#installation to solve the issue. 
-Training will complete even if the error occurs, so after training a new net, you may go and test it. 
+Dependencies: 
+NEAT; install here https://neat-python.readthedocs.io/en/latest/installation.html
+GraphViz; install here https://graphviz.readthedocs.io/en/stable/manual.html#installation
+
+GraphViz is only needed for the trainer to properly display winning genome. 
+Training will save even if the graphviz error occurs, so you may still play against your network.  
