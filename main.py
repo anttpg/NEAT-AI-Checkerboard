@@ -258,7 +258,7 @@ def run_neat(config_path):
 
     # if NOT IN TRAINING!
     if(gameType != 5):
-        pop = neat.Checkpointer.restore_checkpoint('LaptopCheckpointV2-11934')
+        pop = neat.Checkpointer.restore_checkpoint('PretrainedNetwork_500Pop_11934Runs')
 
         # Find the most fit genome to play against
         best_genome = None
@@ -287,9 +287,9 @@ def run_neat(config_path):
         runs = 100
         # Run for up to R(100) generations.
         winner = pop.run(eval_genomes, runs) #number of runs
-        with open("best genome over %d runs.pkl"%runs, "wb") as f:
-            pickle.dump(winner, f)
-            f.close()
+        # with open("bg-%d-runs-max.pkl"%runs, "wb") as f:
+        #     pickle.dump(winner, f)
+        #     f.close()
 
         # Display the winning genome.
         #print('\nBest genome:\n {!s}'.format(winner))
