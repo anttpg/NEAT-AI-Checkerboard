@@ -38,6 +38,9 @@ class Robot:
 
 
 
+    def getOriginalSwapped(self):
+        return [self.choiceFrom[0], self.choiceFrom[2],self.choiceFrom[1]]
+    
     def getOriginalChecker(self):
         return self.choiceFrom
         
@@ -49,6 +52,10 @@ class Robot:
 
     def getMove(self):
         return [self.choiceTo[1],self.choiceTo[2]]
+
+    def getMoveSwapped(self):
+        return [self.choiceTo[2],self.choiceTo[1]]
+    
 
     def getColor(self):
         return self.color
