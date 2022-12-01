@@ -1,5 +1,6 @@
 from math import e, sin
 from pickletools import int4
+import time
 from tkinter import *
 from board import *
 import neat
@@ -35,7 +36,7 @@ red = [
 
 count = 0
 fitnesses = [0]*10000
-oneGame = type(None)
+
 
 
 
@@ -92,57 +93,67 @@ def replay_genome(config_path, genome_path="winner.pkl"):
 
 
 # Determine who plays what side
-def single_genome():
+def single_genome(bestNet):
     if(gameType == 0 or gameType == 2):
         oneHuman = Human("Blue", [red,blue],i)
         oneRobot = Robot("Red", [red,blue],i)
         oneGame = checkerboardClass(copy.deepcopy(board_config), copy.deepcopy(red), copy.deepcopy(blue), oneHuman, oneRobot)
+        oneGame.setUIboard(GraphicalBoard(oneGame, oneHuman, bestNet))
+        oneGame.UIboard.start()
+        
 
     if(gameType == 1 or gameType == 3):
         oneRobot = Robot("Blue", [red,blue],i)
         oneHuman = Human("Red", [red,blue],i)
         oneGame = checkerboardClass(copy.deepcopy(board_config), copy.deepcopy(red), copy.deepcopy(blue), oneRobot, oneHuman)
+        oneGame.setUIboard(GraphicalBoard(oneGame, oneHuman, bestNet))
+        oneGame.UIboard.start()
+        
 
 
-def play_game(net): 
-    while(oneGame.win == False): ##while nobody has won, continue to run. 
-        if (oneGame.currentTurn == "Blue"):
-            if(oneGame.p1.isRobot()):
-                output = net.activate(oneGame.refreshData()) 
-                oneGame.getSelection(oneGame.p1,output)  
-            
+
+def play_game(net, game): 
+    while(game.win == False): ##while nobody has won, continue to run.
+
+        if (game.currentTurn == "Blue"):
+            if(game.p1.isRobot()):
+                output = net.activate(game.refreshData()) 
+                game.getSelection(game.p1,output)  
+
             else:
-                if(gameType == 2 or gameType == 3):
-                    oneGame.p1.requestSelection()
-                else:
-                    pass #graphical input here.
+                print("waiting1")
+                while(game.getUIboard().hasPlayerMoved() == False):
+                    time.sleep(0.1)
+                    print("waiting2")
+                
 
 
-            if(oneGame.win == False and oneGame.turnTimer < 125):
-                oneGame.turn(oneGame.p1)
+            if(game.win == False and game.turnTimer < 125):
+                game.turn(game.p1)
             else:
-                oneGame.p2.changeFitness(15)
-                break
+                game.p2.changeFitness(15)
+                break    
 
         
-        else:
-            if(oneGame.p2.isRobot()):
-                output = net.activate(oneGame.refreshData()) 
-                oneGame.getSelection(oneGame.p2,output)  
+        else: # must be red
+            if(game.p2.isRobot()):
+                output = net.activate(game.refreshData()) ##Red checkers, blue checkers. BLUE CHECKER ROBOT
+                game.getSelection(game.p2,output)  
+
+            else:
+                print("wa1")
+                while(game.getUIboard().hasPlayerMoved() == False):
+                    time.sleep(0.1)
+                    print("wa2")
+
+
             
+            if(game.win == False and game.turnTimer < 125):
+                game.turn(game.p2)
             else:
-                if(gameType == 2 or gameType == 3):
-                    oneGame.p2.requestSelection()
-                else:
-                    pass #graphical input here.
-
-
-            if(oneGame.win == False and oneGame.turnTimer < 125):
-                oneGame.turn(oneGame.p2)
-            else:
-                oneGame.p1.changeFitness(15)
+                game.p1.changeFitness(15)
                 break
-
+                
 
 
 def eval_genomes(genomes, config):
@@ -157,113 +168,66 @@ def eval_genomes(genomes, config):
 
     i = 0
 
-    if(len(genomes) == 1):
-        # print(genomes)
-        net = neat.nn.FeedForwardNetwork.create(genomes[0], config)
+    for id, genome in genomes:
+        ##creates the robots
+    
+        if i % 2 == 0:
+            r = Robot("Blue", [red,blue],i)
+            blueRobots.append(r)
+        else:
+            r = Robot("Red" , [red,blue],i)
+            redRobots.append(r)
 
-        play_game(net)
-                
-        oneGame.prettyBoard()
-        oneGame.p1.changeFitness((-0.01)*oneGame.getTurn())
-        oneGame.p2.changeFitness((-0.01)*oneGame.getTurn())
-        player1Fitness = oneGame.p1.getFitness()
-        player2Fitness = oneGame.p2.getFitness()
+        i+=1
+        allRobots.append(r)
 
-        genomes[0].fitness += ((player1Fitness/abs(player1Fitness-player2Fitness))+(player1Fitness/3)) if (player1Fitness-player2Fitness) != 0 else (player1Fitness/3)
-        genomes[0].fitness += ((player2Fitness/abs(player2Fitness-player1Fitness))+(player2Fitness/3)) if (player2Fitness-player1Fitness) != 0 else (player2Fitness/3)
-        fitnesses[0] = genomes[0].fitness
-        fitnesses[0] = genomes[0].fitness
-
-
-
-    else:
-        for id, genome in genomes:
-            ##creates the robots
+        genomeList.append(genome)
         
-            if i % 2 == 0:
-                r = Robot("Blue", [red,blue],i)
-                blueRobots.append(r)
-            else:
-                r = Robot("Red" , [red,blue],i)
-                redRobots.append(r)
-
-            i+=1
-            allRobots.append(r)
-
-            genomeList.append(genome)
-            
-            # Append updated network to the list of all networks
-            net = neat.nn.FeedForwardNetwork.create(genome, config)
-            nets.append(net)
-            if(genome.fitness == None): 
-                genome.fitness = 2
+        # Append updated network to the list of all networks
+        net = neat.nn.FeedForwardNetwork.create(genome, config)
+        nets.append(net)
+        if(genome.fitness == None): 
+            genome.fitness = 2
 
 
-        for robotCounter in range(len(allRobots)):
-            genomeList[robotCounter].fitness += fitnesses[robotCounter-1]
+    for robotCounter in range(len(allRobots)):
+        genomeList[robotCounter].fitness += fitnesses[robotCounter-1]
+    
+
+    for r in range(len(allRobots)):  
+        try:  
+            currentGames.append(checkerboardClass(copy.deepcopy(board_config), copy.deepcopy(red), copy.deepcopy(blue), blueRobots[r],redRobots[r]))
+        except:
+            pass
+            genomeList[robotCounter].fitness = 0
+        r+=1
+
+
+
+    #for each game, play through an entire game
+    for robotCounter, game in enumerate(currentGames):
+        play_game(nets[robotCounter], game)
+
+        game.prettyBoard()
+        game.p1.changeFitness((-0.01)*game.getTurn())
+        game.p2.changeFitness((-0.01)*game.getTurn())
+        player1Fitness = game.p1.getFitness()
+        player2Fitness = game.p2.getFitness()
+
+        genomeList[(robotCounter*2)-1].fitness += ((player1Fitness/abs(player1Fitness-player2Fitness))+(player1Fitness/3)) if (player1Fitness-player2Fitness) != 0 else (player1Fitness/3)
+        genomeList[  robotCounter*2  ].fitness += ((player2Fitness/abs(player2Fitness-player1Fitness))+(player2Fitness/3)) if (player2Fitness-player1Fitness) != 0 else (player2Fitness/3)
+        fitnesses[(robotCounter*2)-1] = genomeList[(robotCounter*2)-1].fitness
+        fitnesses[  robotCounter*2  ] = genomeList[  robotCounter*2  ].fitness
         
-
-        for r in range(len(allRobots)):  
-            try:  
-                currentGames.append(checkerboardClass(copy.deepcopy(board_config), copy.deepcopy(red), copy.deepcopy(blue), blueRobots[r],redRobots[r]))
-            except:
-                pass
-                genomeList[robotCounter].fitness = 0
-            r+=1
-
-
-
-        #for each game, play through an entire game
-        for robotCounter, game in enumerate(currentGames):
-            while(game.win == False): ##while nobody has won, continue to run. 
-                if (game.currentTurn == "Blue"):
-                    
-                    output = nets[robotCounter].activate(game.refreshData()) 
-                    game.getSelection(game.p1,output)  
-
-                    if(game.win == False and game.turnTimer < 125):
-                        game.turn(game.p1)
-                    else:
-                        game.p2.changeFitness(15)
-                        break
-                
-                # If red turn, 
-                else:
-                    output = nets[robotCounter].activate(game.refreshData()) ##Red checkers, blue checkers. BLUE CHECKER ROBOT
-                    game.getSelection(game.p2,output)  
-
-                    if(game.win == False and game.turnTimer < 125):
-                        game.turn(game.p2)
-                    else:
-                        game.p1.changeFitness(15)
-                        break
-                    
-                
-                    
-                
-                #time.sleep(0.5)
-            game.prettyBoard()
-            game.p1.changeFitness((-0.01)*game.getTurn())
-            game.p2.changeFitness((-0.01)*game.getTurn())
-            player1Fitness = game.p1.getFitness()
-            player2Fitness = game.p2.getFitness()
-
-            genomeList[(robotCounter*2)-1].fitness += ((player1Fitness/abs(player1Fitness-player2Fitness))+(player1Fitness/3)) if (player1Fitness-player2Fitness) != 0 else (player1Fitness/3)
-            genomeList[  robotCounter*2  ].fitness += ((player2Fitness/abs(player2Fitness-player1Fitness))+(player2Fitness/3)) if (player2Fitness-player1Fitness) != 0 else (player2Fitness/3)
-            fitnesses[(robotCounter*2)-1] = genomeList[(robotCounter*2)-1].fitness
-            fitnesses[  robotCounter*2  ] = genomeList[  robotCounter*2  ].fitness
-            
-            # if (p1f/abs(p1f-p2f)) < 0:
-            #     raise ValueError("ERROR: fitness for p1 is negative (" + (p1f/abs(p1f-p2f)) + ")")
-            # if (p2f/abs(p2f-p1f)) < 0:
-            #     raise ValueError("ERROR: fitness for p2 is negative (" + (p2f/abs(p2f-p1f)) + ")")     
-            
-            #int((geno[  g*2  ].fitness)/count)
-            
+        # if (p1f/abs(p1f-p2f)) < 0:
+        #     raise ValueError("ERROR: fitness for p1 is negative (" + (p1f/abs(p1f-p2f)) + ")")
+        # if (p2f/abs(p2f-p1f)) < 0:
+        #     raise ValueError("ERROR: fitness for p2 is negative (" + (p2f/abs(p2f-p1f)) + ")")     
+        
+        #int((geno[  g*2  ].fitness)/count)
+        
 
         random.shuffle(genomes)
-
-
 
 
 
@@ -302,8 +266,8 @@ def run_neat(config_path):
             if best_genome == None or (i.fitness != None and best_genome.fitness < i.fitness):
                 best_genome = i
 
-        single_genome()
-        play_game(best_genome)
+        bestNet = neat.nn.FeedForwardNetwork.create(best_genome, config)
+        single_genome(bestNet)
 
         # pop = neat.Population(config, [
         #    {best_genome.key: best_genome}, pop.species, pop.generation])
