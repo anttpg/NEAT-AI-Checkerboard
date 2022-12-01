@@ -1,1 +1,0 @@
-# NEAT-Checkerboard-STEM-Project

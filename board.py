@@ -1,8 +1,8 @@
 from sys import builtin_module_names
 import random as rand
 from copy import copy
-from Robot import *
-from Human import *
+from robot import *
+from human import *
 
 class checkerboardClass:
     data = []

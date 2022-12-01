@@ -1,7 +1,7 @@
 from math import e, sin
 from pickletools import int4
 from tkinter import *
-from Board import *
+from board import *
 import neat
 import os
 import random
@@ -62,11 +62,11 @@ root.wm_attributes("-topmost", 1)
 
 
 for i in range(6):
-    b = Button(root, text=DispTXT[i], command= lambda i = i: multiFunky(i))
+    b = Button(root, text=DispTXT[i], command= lambda i = i: deleteButtons(i))
     b.pack()
     button.append(b)
 
-def multiFunky(players):
+def deleteButtons(players):
     global gameType
     gameType = players
     for i in range(6):
@@ -91,92 +91,86 @@ def replay_genome(config_path, genome_path="winner.pkl"):
         genome = pickle.load(f)
 
 
+# Determine who plays what side
 def single_genome():
-    if(gameType == 0):
+    if(gameType == 0 or gameType == 2):
         oneHuman = Human("Blue", [red,blue],i)
         oneRobot = Robot("Red", [red,blue],i)
         oneGame = checkerboardClass(copy.deepcopy(board_config), copy.deepcopy(red), copy.deepcopy(blue), oneHuman, oneRobot)
 
-    if(gameType == 1):
+    if(gameType == 1 or gameType == 3):
         oneRobot = Robot("Blue", [red,blue],i)
         oneHuman = Human("Red", [red,blue],i)
         oneGame = checkerboardClass(copy.deepcopy(board_config), copy.deepcopy(red), copy.deepcopy(blue), oneRobot, oneHuman)
 
-    if(gameType == 2):
-        oneHuman = Human("Blue", [red,blue],i)
-        oneRobot = Robot("Red", [red,blue],i)
-        oneGame = checkerboardClass(copy.deepcopy(board_config), copy.deepcopy(red), copy.deepcopy(blue), oneHuman, oneRobot)
 
-    if(gameType == 3):
-        oneRobot = Robot("Blue", [red,blue],i)
-        oneHuman = Human("Red", [red,blue],i)
-        oneGame = checkerboardClass(copy.deepcopy(board_config), copy.deepcopy(red), copy.deepcopy(blue), oneRobot, oneHuman)
+def play_game(net): 
+    while(oneGame.win == False): ##while nobody has won, continue to run. 
+        if (oneGame.currentTurn == "Blue"):
+            if(oneGame.p1.isRobot()):
+                output = net.activate(oneGame.refreshData()) 
+                oneGame.getSelection(oneGame.p1,output)  
+            
+            else:
+                if(gameType == 2 or gameType == 3):
+                    oneGame.p1.requestSelection()
+                else:
+                    pass #graphical input here.
 
+
+            if(oneGame.win == False and oneGame.turnTimer < 125):
+                oneGame.turn(oneGame.p1)
+            else:
+                oneGame.p2.changeFitness(15)
+                break
+
+        
+        else:
+            if(oneGame.p2.isRobot()):
+                output = net.activate(oneGame.refreshData()) 
+                oneGame.getSelection(oneGame.p2,output)  
+            
+            else:
+                if(gameType == 2 or gameType == 3):
+                    oneGame.p2.requestSelection()
+                else:
+                    pass #graphical input here.
+
+
+            if(oneGame.win == False and oneGame.turnTimer < 125):
+                oneGame.turn(oneGame.p2)
+            else:
+                oneGame.p1.changeFitness(15)
+                break
 
 
 
 def eval_genomes(genomes, config):
-    global geno, nets, fitnesses, currentGames, redRobots, blueRobots, allRobots, count, oneRobot
+    global genomeList, nets, fitnesses, currentGames, redRobots, blueRobots, allRobots, count, oneRobot
     blueRobots = []
     redRobots = []
     allRobots = []
-    geno = []
+    genomeList = []
     nets = []
     currentGames = []
     count += 1
 
-
     i = 0
+
     if(len(genomes) == 1):
-        print(genomes)
+        # print(genomes)
         net = neat.nn.FeedForwardNetwork.create(genomes[0], config)
 
-        while(oneGame.win == False): ##while nobody has won, continue to run. 
-            if (oneGame.currentTurn == "Blue"):
-                if(oneGame.p1.isRobot()):
-                    output = net.activate(oneGame.refreshData()) 
-                    oneGame.getSelection(oneGame.p1,output)  
-                
-                else:
-                    if(gameType == 2 or gameType == 3):
-                        oneGame.p1.requestSelection()
-                    else:
-                        pass #graphical input here.
-
-
-                if(oneGame.win == False and oneGame.turnTimer < 125):
-                    oneGame.turn(oneGame.p1)
-                else:
-                    oneGame.p2.changeFitness(15)
-                    break
-
-            
-            else:
-                if(oneGame.p2.isRobot()):
-                    output = net.activate(oneGame.refreshData()) 
-                    oneGame.getSelection(oneGame.p2,output)  
-                
-                else:
-                    if(gameType == 2 or gameType == 3):
-                        oneGame.p2.requestSelection()
-                    else:
-                        pass #graphical input here.
-
-
-                if(oneGame.win == False and oneGame.turnTimer < 125):
-                    oneGame.turn(oneGame.p2)
-                else:
-                    oneGame.p1.changeFitness(15)
-                    break
+        play_game(net)
                 
         oneGame.prettyBoard()
         oneGame.p1.changeFitness((-0.01)*oneGame.getTurn())
         oneGame.p2.changeFitness((-0.01)*oneGame.getTurn())
-        p1f = oneGame.p1.getFitness()
-        p2f = oneGame.p2.getFitness()
+        player1Fitness = oneGame.p1.getFitness()
+        player2Fitness = oneGame.p2.getFitness()
 
-        genomes[0].fitness += ((p1f/abs(p1f-p2f))+(p1f/3)) if (p1f-p2f) != 0 else (p1f/3)
-        genomes[0].fitness += ((p2f/abs(p2f-p1f))+(p2f/3)) if (p2f-p1f) != 0 else (p2f/3)
+        genomes[0].fitness += ((player1Fitness/abs(player1Fitness-player2Fitness))+(player1Fitness/3)) if (player1Fitness-player2Fitness) != 0 else (player1Fitness/3)
+        genomes[0].fitness += ((player2Fitness/abs(player2Fitness-player1Fitness))+(player2Fitness/3)) if (player2Fitness-player1Fitness) != 0 else (player2Fitness/3)
         fitnesses[0] = genomes[0].fitness
         fitnesses[0] = genomes[0].fitness
 
@@ -196,20 +190,17 @@ def eval_genomes(genomes, config):
             i+=1
             allRobots.append(r)
 
-            geno.append(genome)
-            print(geno)
+            genomeList.append(genome)
+            
+            # Append updated network to the list of all networks
             net = neat.nn.FeedForwardNetwork.create(genome, config)
             nets.append(net)
             if(genome.fitness == None): 
                 genome.fitness = 2
 
-        
 
-
-        for g in range(allRobots):
-            geno[g].fitness += fitnesses[g-1]
-        
-
+        for robotCounter in range(len(allRobots)):
+            genomeList[robotCounter].fitness += fitnesses[robotCounter-1]
         
 
         for r in range(len(allRobots)):  
@@ -217,39 +208,29 @@ def eval_genomes(genomes, config):
                 currentGames.append(checkerboardClass(copy.deepcopy(board_config), copy.deepcopy(red), copy.deepcopy(blue), blueRobots[r],redRobots[r]))
             except:
                 pass
-                geno[g].fitness = 0
+                genomeList[robotCounter].fitness = 0
             r+=1
 
 
-        
+
         #for each game, play through an entire game
-        for g, game in enumerate(currentGames):
+        for robotCounter, game in enumerate(currentGames):
             while(game.win == False): ##while nobody has won, continue to run. 
                 if (game.currentTurn == "Blue"):
                     
-                    output = nets[g].activate(game.refreshData()) 
-                    #print(output,(output[0] + output[1] + output[2] + output[3])/4, " Player 1")
+                    output = nets[robotCounter].activate(game.refreshData()) 
                     game.getSelection(game.p1,output)  
-                    
-                    #print(game.p1.getOriginalChecker())
-                    #print(game.p1.getFinalChecker())
 
                     if(game.win == False and game.turnTimer < 125):
                         game.turn(game.p1)
                     else:
                         game.p2.changeFitness(15)
                         break
-
-
-
                 
+                # If red turn, 
                 else:
-                    output = nets[g].activate(game.refreshData()) ##Red checkers, blue checkers. BLUE CHECKER ROBOT
-                    #print(output, " Player 2")
+                    output = nets[robotCounter].activate(game.refreshData()) ##Red checkers, blue checkers. BLUE CHECKER ROBOT
                     game.getSelection(game.p2,output)  
-                    
-                    #print(game.p2.getOriginalChecker())
-                    #print(game.p2.getFinalChecker())
 
                     if(game.win == False and game.turnTimer < 125):
                         game.turn(game.p2)
@@ -261,16 +242,16 @@ def eval_genomes(genomes, config):
                     
                 
                 #time.sleep(0.5)
-            #game.prettyBoard()
+            game.prettyBoard()
             game.p1.changeFitness((-0.01)*game.getTurn())
             game.p2.changeFitness((-0.01)*game.getTurn())
-            p1f = game.p1.getFitness()
-            p2f = game.p2.getFitness()
+            player1Fitness = game.p1.getFitness()
+            player2Fitness = game.p2.getFitness()
 
-            geno[(g*2)-1].fitness += ((p1f/abs(p1f-p2f))+(p1f/3)) if (p1f-p2f) != 0 else (p1f/3)
-            geno[  g*2  ].fitness += ((p2f/abs(p2f-p1f))+(p2f/3)) if (p2f-p1f) != 0 else (p2f/3)
-            fitnesses[(g*2)-1] = geno[(g*2)-1].fitness
-            fitnesses[  g*2  ] = geno[  g*2  ].fitness
+            genomeList[(robotCounter*2)-1].fitness += ((player1Fitness/abs(player1Fitness-player2Fitness))+(player1Fitness/3)) if (player1Fitness-player2Fitness) != 0 else (player1Fitness/3)
+            genomeList[  robotCounter*2  ].fitness += ((player2Fitness/abs(player2Fitness-player1Fitness))+(player2Fitness/3)) if (player2Fitness-player1Fitness) != 0 else (player2Fitness/3)
+            fitnesses[(robotCounter*2)-1] = genomeList[(robotCounter*2)-1].fitness
+            fitnesses[  robotCounter*2  ] = genomeList[  robotCounter*2  ].fitness
             
             # if (p1f/abs(p1f-p2f)) < 0:
             #     raise ValueError("ERROR: fitness for p1 is negative (" + (p1f/abs(p1f-p2f)) + ")")
@@ -308,56 +289,52 @@ def run_neat(config_path):
 
     config.genome_config.add_activation('modified_sigmoid', mod_sigmoid)   
 
-
-
     # Create the population, which is the top-level object for a NEAT run.
-    #pop = neat.Checkpointer.restore_checkpoint('LaptopCheckpointV2-11934')
     pop = type(None)
 
+    # if NOT IN TRAINING!
     if(gameType != 5):
         pop = neat.Checkpointer.restore_checkpoint('LaptopCheckpointV2-11934')
-        #for g in itervalues(pop.population):
-         #   print(g.fitness)
-       # print("Bestc: " + str(pop.best_genome))
-        print(str(type(pop.species)) + " ***************************************")
+
+        # Find the most fit genome to play against
         best_genome = None
         for i in pop.population.values():
             if best_genome == None or (i.fitness != None and best_genome.fitness < i.fitness):
                 best_genome = i
-        #print(best_genome)
+
         single_genome()
-        print(str(pop.population) + "\n GENERATION: " + str(pop.generation) + "\n SPECIES: " + str(pop.species))
+        play_game(best_genome)
 
-        pop = neat.Population(config, [
-            {best_genome.key: best_genome}, pop.species, pop.generation])
+        # pop = neat.Population(config, [
+        #    {best_genome.key: best_genome}, pop.species, pop.generation])
         
-
+        
+    # Training instead
     else:
         pop = neat.Population(config)
 
-    # Add a stdout reporter to show progress in the terminal.
-    pop.add_reporter(neat.StdOutReporter(True))
-    stats = neat.StatisticsReporter()
-    pop.add_reporter(stats)
-    pop.add_reporter(neat.Checkpointer(100))
+        # Add a stdout reporter to show progress in the terminal.
+        pop.add_reporter(neat.StdOutReporter(True))
+        stats = neat.StatisticsReporter()
+        pop.add_reporter(stats)
+        pop.add_reporter(neat.Checkpointer(100))
 
 
-    runs = 100000
-    # Run for up to R(100,000) generations.
-    winner = pop.run(eval_genomes, runs) #number of runs
-    with open("best genome %d runs.pkl"%runs, "wb") as f:
-        pickle.dump(winner, f)
-        f.close()
+        runs = 100000
+        # Run for up to R(100,000) generations.
+        winner = pop.run(eval_genomes, runs) #number of runs
+        with open("best genome %d runs.pkl"%runs, "wb") as f:
+            pickle.dump(winner, f)
+            f.close()
 
-    # Display the winning genome.
-    #print('\nBest genome:\n
-    # {!s}'.format(winner))
+        # Display the winning genome.
+        #print('\nBest genome:\n {!s}'.format(winner))
     
-    # Show output of the most fit genome against training data.
-    node_names = {}
-    visualize.draw_net(config, winner, True, node_names=node_names)
-    visualize.plot_stats(stats, ylog=False, view=True)
-    visualize.plot_species(stats, view=True)
+        # Show output of the most fit genome against training data.
+        node_names = {}
+        visualize.draw_net(config, winner, True, node_names=node_names)
+        visualize.plot_stats(stats, ylog=False, view=True)
+        visualize.plot_species(stats, view=True)
 
 
 
