@@ -222,8 +222,13 @@ class checkerboardClass:
                 self.switchTurn()
                 self.turnTimer += 1
                 
-                self.UIboard.setTurn(self.currentTurn)
-                self.UIboard.human.isSelected = False
+                try:
+                    self.UIboard.setTurn(self.currentTurn)
+                    self.UIboard.human.isSelected = False
+                except:
+                    pass #woo bad codes
+
+                
 
         else:
             print("Sorry! That is not a legal move. Please follow the 135 format, [Rank + Y + X].")
