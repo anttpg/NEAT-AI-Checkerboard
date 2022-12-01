@@ -281,13 +281,13 @@ def run_neat(config_path):
         pop.add_reporter(neat.StdOutReporter(True))
         stats = neat.StatisticsReporter()
         pop.add_reporter(stats)
-        pop.add_reporter(neat.Checkpointer(100))
+        pop.add_reporter(neat.Checkpointer(5))
 
 
-        runs = 100000
-        # Run for up to R(100,000) generations.
+        runs = 100
+        # Run for up to R(100) generations.
         winner = pop.run(eval_genomes, runs) #number of runs
-        with open("best genome %d runs.pkl"%runs, "wb") as f:
+        with open("best genome over %d runs.pkl"%runs, "wb") as f:
             pickle.dump(winner, f)
             f.close()
 
