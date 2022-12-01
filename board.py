@@ -1,6 +1,7 @@
 from sys import builtin_module_names
 import random as rand
-from copy import copy
+from copy import copy, deepcopy
+import time
 from robot import *
 from human import *
 
@@ -9,7 +10,9 @@ class checkerboardClass:
     currentTurn = "Blue"
     makeKing = False
     win = False
+    UIboard = None
     turnTimer = 0
+    captured = None
 
     ##sets up who will be playing what and board configuration
     def __init__(self, boardConfig, red, blue, p1, p2):
@@ -29,8 +32,13 @@ class checkerboardClass:
         self.p1.resetFitness()
         self.p2.resetFitness()
         
+        
+    def setUIboard(self, UIboard):
+        self.UIboard = UIboard
+
 
         
+         
         
     def refreshData(self):
         tempC = []
@@ -74,7 +82,7 @@ class checkerboardClass:
 
     
 
-    def getSelection(self,p,netsOutput):
+    def getSelection(self,currentBot,netsOutput):
         moveList = []
         move = [0,0,0]
         originalChecker = []
@@ -109,11 +117,10 @@ class checkerboardClass:
                         move[2] = originalChecker[2] + legalJumps[i][1]
                         ##getMove() returns the move position IE [4,6]
                         #print(tempC)
-                        if((move[1]!=0 and move[1]!=9) and 
-                            (move[2]!=0 and move[2]!=9)):
+                        if((move[1]>0 and move[1]<9) and (move[2]>0 and move[2]<9)):
                             ##Makes sure place chosen is free to prevent jumping on another checker
-                            if(not(  self.legalChoice( tempC, "Blue") or self.legalChoice( [2,tempC[1],tempC[2]], "Blue") 
-                                or self.legalChoice( tempC, "Red" ) or self.legalChoice( [2,tempC[1],tempC[2]], "Red" )  )):
+                            if( not(self.legalChoice( [1,tempC[1],tempC[2]], "Blue")) and not(self.legalChoice( [2,tempC[1],tempC[2]], "Blue")) and 
+                                not(self.legalChoice( [1,tempC[1],tempC[2]], "Red" )) and not(self.legalChoice( [2,tempC[1],tempC[2]], "Red" )) ):
 
                                 ##checks if its a jump move
                                 if(i % 2 == 1):
@@ -157,7 +164,8 @@ class checkerboardClass:
         if(moveList == []):
             self.win = True
             return
-        p.setSelection(moveList[o][0], moveList[o][1]) 
+
+        currentBot.setSelection(moveList[o][0], moveList[o][1]) 
        
 
 
@@ -213,10 +221,13 @@ class checkerboardClass:
                 p.giveData([self.redCheckers,self.blueCheckers])
                 self.switchTurn()
                 self.turnTimer += 1
-            
+                
+                self.UIboard.setTurn(self.currentTurn)
+                self.UIboard.human.isSelected = False
+
         else:
             print("Sorry! That is not a legal move. Please follow the 135 format, [Rank + Y + X].")
-            #p.changeFitness(-1)
+            time.sleep(0.3)
         p.resetChoice()
         
         
@@ -256,6 +267,7 @@ class checkerboardClass:
             self.blueCheckers[self.blueCheckers.index(p.getOriginalChecker())] = p.getFinalChecker() ##updates new checker position
 
             if(jump):
+                self.captured = deepcopy(self.redCheckers[capturedChecker])
                 self.redCheckers[capturedChecker] = [-2,-2,-2]
                 if(p.isRobot()):
                     p.changeFitness(1)  ## good move means robot fitness increases
@@ -270,6 +282,7 @@ class checkerboardClass:
             self.redCheckers[self.redCheckers.index(p.getOriginalChecker())] = p.getFinalChecker()
 
             if(jump):
+                self.captured = deepcopy(self.blueCheckers[capturedChecker])
                 self.blueCheckers[capturedChecker] = [-2,-2,-2]
                 if(p.isRobot()):
                     p.changeFitness(1)
