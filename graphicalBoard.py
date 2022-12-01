@@ -1,5 +1,7 @@
+import copy
+import time
 from tkinter import *
-
+from threading import Thread
 
 
 
@@ -19,47 +21,69 @@ def getStarPoints(x,y,h):
             points[i] += x
     return points
 
+#Gets the size of the screen being used.
+def get_display_size():
+    root = Tk()
+    root.update_idletasks()
+    root.attributes('-fullscreen', True)
+    root.state('iconic')
+    height = root.winfo_screenheight()
+    root.destroy()
+
+    #setup so that it works well with all screens. rn -400 is good for me, but doesnt work on a laptop
+    #lower priority fix.
+    return height-250 #Arbitrary number to make height GUI smaller than screen
 
 
-class checkerboardClass:
+class GraphicalBoard:
+    mainBoard = None
 
     initial = []
     spaceID = []
     redObjects = []
     blueObjects = []
-    turn = "blue"
     canvas = None
     checker = None
     deleteChecker = None
     display_size = None
     checkerI = 0
+
+    toChange = None
+    toDelete = None
     
-    robot1 = None
-    robot2 = None
     
 
-    def __init__(self, players,display,init):
-        if players == 0: 
-            self.turn = "red"
-            self.robot1 = robot("blue")
-        if players == 1:
-            self.turn = "blue"
-            self.robot1 = robot("red")
-        if players == 2:
-            self.robot1 = robot("blue")
-            self.robot2 = robot("red")
-        if players == 3:
-            self.turn = "red"
-            
-        self.display_size = display
-        self.initial = init
+    def __init__(self, mainBoard, human, bestNet):
+        self.display_size = get_display_size()
+        self.mainBoard = mainBoard
+        self.human = human
+        self.net = bestNet
+        self.turn = "Blue"
+        self.initial = [
+            [[1,1,1],[1,1,3],[1,1,5],[1,1,7],
+            [1,2,2],[1,2,4],[1,2,6],[1,2,8],
+            [1,3,1],[1,3,3],[1,3,5],[1,3,7]],[
+
+            [1,6,2],[1,6,4],[1,6,6],[1,6,8],
+            [1,7,1],[1,7,3],[1,7,5],[1,7,7],
+            [1,8,2],[1,8,4],[1,8,6],[1,8,8]]]
         
+        self.boardthread = None
+
+    def start(self):
+        self.boardthread = Thread(target=self.boardWindow()).start()
 
     #Grapics; self explanitory
     def ring(self,w):    
         if self.checker != None:
             self.canvas.itemconfig(self.checker[3], outline='gold',width = w)   
 
+    def hasPlayerMoved(self):
+        if(self.human.isSelected == True):
+            return True
+    
+    def setTurn(self, t):
+        self.turn = t 
 
     #Draws the current state of the checkers in a given list
     def draw_checkers(self,tokenList,color):  
@@ -74,9 +98,8 @@ class checkerboardClass:
                 #points = getStarPoints(x,y,h)
                 #star = self.canvas.create_polygon(points,outline="gold",fill="gold",width=4)
             objects.append([rank,row,col,tokenID,color])
-                
-            
-            
+
+
         return objects
 
 
@@ -106,51 +129,17 @@ class checkerboardClass:
         self.canvas.delete("all")
         self.draw_spaces()
 
-        self.blueObjects = self.draw_checkers(self.initial[0],"blue")
-        self.redObjects = self.draw_checkers(self.initial[1],"red")
+        self.blueObjects = self.draw_checkers(self.initial[0],"Blue")
+        self.redObjects = self.draw_checkers(self.initial[1],"Red")
         del self.initial
                
 
     def on_click(self, event):
-        turn = self.turn
-        self.ring(0)
-        #Find clicked object
-        clickedObject = self.canvas.find_closest(event.x, event.y)[0]
-        self.play(clickedObject)
-
-
-    def run(self):
-        robot1 = self.robot1
-        robot2 = self.robot2
-        try:
-            print('catch 1a')
-            if robot1.isComputerMove(self.turn):
-                print('catch 2a')
-                robot1.randomizeMove()
-                self.checker=robot1.getChecker()
-                print(robot1.getChecker())
-                while self.legalMove(robot1.getMove()) == False: 
-                    robot1.randomizeMove()
-
-                self.moveChecker(robot1.getMove())
-        except:
-            pass
-        try:
-            
-            if robot2.isComputerMove(self.turn):
-                print('catch 4a')
-                robot2.randomizeMove()
-                self.checker=robot2.getChecker()
-                print(robot2.getChecker())
-                while self.legalMove(robot2.getMove()) == False: 
-                    robot2.randomizeMove()
-                
-                self.moveChecker(robot2.getMove())
-            print('catch 3a PASS')
-        except:
-            pass
-        
-     
+        if(self.mainBoard.currentTurn == self.human.getColor()):
+            self.ring(0)
+            #Find clicked object
+            clickedObject = self.canvas.find_closest(event.x, event.y)[0]
+            self.play(clickedObject) ## check to move human
 
 
 
@@ -160,27 +149,133 @@ class checkerboardClass:
     
     def play(self,clickedObject):
         clickID = clickedObject
-        for i in range(len(self.spaceID)):
-            #if clicked object is a space
-            if self.spaceID[i][2] == clickID and self.checker != None:
-                if self.legalMove(self.spaceID[i]):
-                    self.moveChecker(self.spaceID[i])
-                    
-                    
-
-
+        
         for i in range(len(self.blueObjects)):
-            if self.blueObjects[i][3] == clickID and self.turn == "blue":
+            if self.blueObjects[i][3] == clickID and self.turn == "Blue":
                 self.checker = self.blueObjects[i]
                 self.checkerI = i
                 self.ring(10)        
 
         for i in range(len(self.redObjects)):
-            if self.redObjects[i][3] == clickID and self.turn == "red":
+            if self.redObjects[i][3] == clickID and self.turn == "Red":
                 self.checker = self.redObjects[i]
                 self.checkerI = i
                 self.ring(10)
-        
+
+        for i in range(len(self.spaceID)):
+            #if clicked object is a space
+            if self.spaceID[i][2] == clickID and self.checker != None:
+                if self.legalMove(self.spaceID[i]):
+                    self.moveChecker(self.spaceID[i])
+                    self.playMainBoard()
+
+
+    def updateAImoved(self, checker):
+        checkerToChange = checker.getOriginalSwapped()
+        captured = self.mainBoard.captured
+
+        for red in self.redObjects:
+            if(checker.getColor() == "Red" and red[0] == checkerToChange[0] and red[1] == checkerToChange[1] and red[2] == checkerToChange[2]):
+                self.toChange = red
+
+            if(captured != None and red[0] == captured[0] and red[1] == captured[1] and red[2] == captured[2] ):
+                self.toDelete = copy(captured)
+
+        for blue in self.blueObjects:
+            if(checker.getColor() == "Blue" and blue[0] == checkerToChange[0] and blue[1] == checkerToChange[1] and blue[2] == checkerToChange[2]):
+                self.toChange = blue
+
+            if(captured != None and blue[0] == captured[0] and blue[1] == captured[1] and blue[2] == captured[2]):
+                self.toDelete = copy(captured)
+
+        self.checker = [self.toChange[0], self.toChange[2], self.toChange[1], self.toChange[3], self.toChange[4]]
+        self.toChange = self.checker
+        self.mainBoard.captured = None
+
+
+    def removeCaptured(self):
+        captured = self.mainBoard.captured
+
+        for i, red in enumerate(self.redObjects):
+            if(captured != None and red[0] == captured[0] and red[2] == captured[1] and red[1] == captured[2] ):
+                self.toDelete = captured
+                self.canvas.delete(red[3])
+                self.blueObjects.pop(i)
+                break
+
+        for i, blue in enumerate(self.blueObjects):
+            if(captured != None and blue[0] == captured[0] and blue[2] == captured[1] and blue[1] == captured[2]):
+                self.toDelete = captured
+                self.canvas.delete(blue[3])
+                self.blueObjects.pop(i)
+                break
+                
+        self.mainBoard.captured = None
+
+
+
+                                    
+    def playMainBoard(self):
+        if(self.mainBoard.win == False):
+            if (self.mainBoard.currentTurn == "Blue"):
+                if(self.mainBoard.p1.isRobot()):
+                    output = self.net.activate(self.mainBoard.refreshData()) 
+                    self.mainBoard.getSelection(self.mainBoard.p1,output) 
+
+                    self.removeCaptured()
+                    self.updateAImoved(self.mainBoard.p1)
+                    self.legalMove(self.mainBoard.p1.getMoveSwapped())
+
+                    for i in range(len(self.spaceID)):
+                        if(self.spaceID[i][0] == self.mainBoard.p1.getMoveSwapped()[0] and self.spaceID[i][1] == self.mainBoard.p1.getMoveSwapped()[1]):
+                            self.checker = self.toChange
+                            self.moveChecker(self.spaceID[i])
+                            #print("blue computer has moved from " + ','.join(self.mainBoard.p1.getOriginalChecker()) + " to " + ','.join(self.mainBoard.p1.getMoveSwapped()))
+
+                else:
+                    print("blue player has moved") 
+
+
+                if(self.mainBoard.win == False and self.mainBoard.turnTimer < 125):
+                    self.mainBoard.turn(self.mainBoard.p1)
+                    if(not self.mainBoard.p1.isRobot()):
+                        self.playMainBoard()
+                        self.removeCaptured()
+                else:
+                    self.mainBoard.p2.changeFitness(15)   
+
+            
+            else: # must be red
+                if(self.mainBoard.p2.isRobot()):
+                    time.sleep(0.5)
+                    output = self.net.activate(self.mainBoard.refreshData()) ##Red checkers, blue checkers. BLUE CHECKER ROBOT
+                    self.mainBoard.getSelection(self.mainBoard.p2,output)  
+
+                    self.removeCaptured()
+                    self.updateAImoved(self.mainBoard.p2) 
+                    self.legalMove(self.mainBoard.p2.getMoveSwapped())
+                    
+
+                    for i in range(len(self.spaceID)):
+                        if(self.spaceID[i][0] == self.mainBoard.p2.getMoveSwapped()[0] and self.spaceID[i][1] == self.mainBoard.p2.getMoveSwapped()[1]):
+                            self.checker = self.toChange
+                            self.moveChecker(self.spaceID[i])
+                            #print("red computer has moved from " + self.mainBoard.p2.getOriginalChecker() + " to " + self.mainBoard.p2.getMove())
+
+
+                else:
+                    print("red player has moved")
+
+
+                if(self.mainBoard.win == False and self.mainBoard.turnTimer < 125):
+                    self.mainBoard.turn(self.mainBoard.p2)
+                    if(not self.mainBoard.p2.isRobot()):
+                        self.playMainBoard()
+                        self.removeCaptured()
+                else:
+                    self.mainBoard.p1.changeFitness(15)                                
+
+
 
 
 
@@ -192,13 +287,17 @@ class checkerboardClass:
     def legalMove(self,move): 
         checker=self.checker
         valid = False 
-        if checker[4] == "red":
+
+        if(self.human.isSelected):
+            return
+
+        if checker[4] == "Red":
             j=-1
-            objA = "red"
+            objA = "Red"
             jumpObj = self.blueObjects
         else:
             j=1
-            objA = "blue"
+            objA = "Blue"
             jumpObj = self.redObjects
 
             
@@ -224,7 +323,7 @@ class checkerboardClass:
                 #checks to make sure 'row' for jump match
                 if move[0] == checker[1]+2 or move[0] == checker[1]-2:
 
-                    if (checker[4] == "blue"):
+                    if (checker[4] == "Blue"):
                         for i in range(len(jumpObj)):
                             jmpChck = jumpObj[i]
                             if (jmpChck[2] == checker[2]+j and (jmpChck[1] == checker[1]+1 or jmpChck[1] == checker[1]-1)):     
@@ -250,7 +349,8 @@ class checkerboardClass:
                 valid = False
 
         if valid == True:
-            if objA == "red":
+            self.human.setChoice(checker)
+            if objA == "Red":
                 self.redObjects[self.checkerI][1] = move[0]
                 self.redObjects[self.checkerI][2] = move[1]
                 if move[1] == 1 and self.checker[0] == 1:
@@ -268,6 +368,8 @@ class checkerboardClass:
                     self.blueObjects[self.checkerI][0] = 2
                     #self.blueObjects[self.checkerI][5] = star
 
+            self.human.setMove(move)
+            self.human.isSelected = True
             return True
         return False
 
@@ -280,20 +382,16 @@ class checkerboardClass:
         x,y = getXY(move[0],move[1],h) 
         self.canvas.coords(self.checker[3],x,y,x+h/8,y+h/8)
         #self.canvas.coords(self.checker[5],getStarPoints(getXY(move[0],move[1],self.display_size)))
-        if self.turn == "red":
-            self.turn = "blue"
-        else:
-            self.turn = "red"
         self.checker = None
 
 
 
-        
-
-
 
     #sets up the window 
-    def boardWindow(self, root):
+    def boardWindow(self):
+        root=Tk()
+        root.wm_attributes("-topmost", 1)
+        root.geometry(str(self.display_size)+'x'+str(self.display_size)  )
         root.title("Checkerboard")
         h=self.display_size
         self.canvas = Canvas(root, width=h,height=h)
@@ -304,6 +402,6 @@ class checkerboardClass:
       
         #this is the program
         self.setup()
-        self.run()
         root.mainloop()
+        
 
