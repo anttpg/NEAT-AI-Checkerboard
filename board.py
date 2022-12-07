@@ -227,13 +227,16 @@ class checkerboardClass:
                     self.UIboard.human.isSelected = False
                 except:
                     pass #woo bad codes
-
-                
+        
+            p.resetChoice()
+            return True
 
         else:
+            p.resetChoice()
             print("Sorry! That is not a legal move. Please follow the 135 format, [Rank + Y + X].")
             time.sleep(0.3)
-        p.resetChoice()
+            return False
+            
         
         
 

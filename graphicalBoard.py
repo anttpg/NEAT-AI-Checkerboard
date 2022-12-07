@@ -216,6 +216,7 @@ class GraphicalBoard:
 
                                     
     def playMainBoard(self):
+        self.prettyBoard()
         if(self.mainBoard.win == False):
             if (self.mainBoard.currentTurn == "Blue"):
                 if(self.mainBoard.p1.isRobot()):
@@ -230,14 +231,26 @@ class GraphicalBoard:
                         if(self.spaceID[i][0] == self.mainBoard.p1.getMoveSwapped()[0] and self.spaceID[i][1] == self.mainBoard.p1.getMoveSwapped()[1]):
                             self.checker = self.toChange
                             self.moveChecker(self.spaceID[i])
+
+                            for blue in self.blueObjects:
+                                if(blue[0] == self.toChange[0] and blue[1] == self.toChange[2] and blue[2] == self.toChange[1]):
+                                    blue[0] = self.mainBoard.p1.getFinalChecker()[0]
+                                    blue[1] = self.mainBoard.p1.getMoveSwapped()[0]
+                                    blue[2] = self.mainBoard.p1.getMoveSwapped()[1]  
                             #print("blue computer has moved from " + ','.join(self.mainBoard.p1.getOriginalChecker()) + " to " + ','.join(self.mainBoard.p1.getMoveSwapped()))
+                    
+
+                    print("blue AI has moved") 
+
 
                 else:
                     print("blue player has moved") 
 
 
                 if(self.mainBoard.win == False and self.mainBoard.turnTimer < 125):
-                    self.mainBoard.turn(self.mainBoard.p1)
+                    if( not(self.mainBoard.turn(self.mainBoard.p1)) ):
+                        return
+
                     if(not self.mainBoard.p1.isRobot()):
                         self.playMainBoard()
                         self.removeCaptured()
@@ -260,15 +273,26 @@ class GraphicalBoard:
                         if(self.spaceID[i][0] == self.mainBoard.p2.getMoveSwapped()[0] and self.spaceID[i][1] == self.mainBoard.p2.getMoveSwapped()[1]):
                             self.checker = self.toChange
                             self.moveChecker(self.spaceID[i])
-                            #print("red computer has moved from " + self.mainBoard.p2.getOriginalChecker() + " to " + self.mainBoard.p2.getMove())
+                            
+                            for blue in self.redObjects:
+                                if(blue[0] == self.toChange[0] and blue[1] == self.toChange[2] and blue[2] == self.toChange[1]):
+                                    blue[0] = self.mainBoard.p2.getFinalChecker()[0]
+                                    blue[1] = self.mainBoard.p2.getMoveSwapped()[0]
+                                    blue[2] = self.mainBoard.p2.getMoveSwapped()[1]                            
 
+                            #print("red computer has moved from " + self.mainBoard.p2.getOriginalChecker() + " to " + self.mainBoard.p2.getMove())
+                    
+
+                    print("red AI has moved")
 
                 else:
                     print("red player has moved")
 
 
                 if(self.mainBoard.win == False and self.mainBoard.turnTimer < 125):
-                    self.mainBoard.turn(self.mainBoard.p2)
+                    if( not(self.mainBoard.turn(self.mainBoard.p2)) ):
+                        return
+
                     if(not self.mainBoard.p2.isRobot()):
                         self.playMainBoard()
                         self.removeCaptured()
@@ -403,5 +427,43 @@ class GraphicalBoard:
         #this is the program
         self.setup()
         root.mainloop()
+
+    def prettyBoard(self):
+        board = [
+        [[],[],[],[],[],[],[],[]],
+        [[],[],[],[],[],[],[],[]],
+        [[],[],[],[],[],[],[],[]],
+        [[],[],[],[],[],[],[],[]],
+        [[],[],[],[],[],[],[],[]],
+        [[],[],[],[],[],[],[],[]],
+        [[],[],[],[],[],[],[],[]],
+        [[],[],[],[],[],[],[],[]]
+        ]
+
+        for y in range(8):
+            for x in range(8):
+                if y % 2 == x % 2:
+                    board[y][x] = "_"
+
+                    for object in self.blueObjects:
+                        if(object[0] == 1 and object[1] == x+1 and object[2] == y+1):
+                            board[y][x] = "b"
+                        elif(object[0] == 2 and object[1] == x+1 and object[2] == y+1):
+                            board[y][x] = "B" 
+
+                    for object in self.redObjects:
+                        if(object[0] == 1 and object[1] == x+1 and object[2] == y+1):
+                            board[y][x] = "r"
+                        elif(object[0] == 2 and object[1] == x+1 and object[2] == y+1):
+                            board[y][x] = "R" 
+                        
+
+                else:                   
+                    board[y][x] = "#"
+
+            print(board[y][0], board[y][1], board[y][2], board[y][3],
+                  board[y][4], board[y][5], board[y][6], board[y][7])
+        
+        print('')
         
 

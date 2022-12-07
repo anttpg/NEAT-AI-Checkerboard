@@ -273,6 +273,7 @@ def run_neat(config_path):
         #    {best_genome.key: best_genome}, pop.species, pop.generation])
         
         
+        
     # Training instead
     else:
         pop = neat.Population(config)
